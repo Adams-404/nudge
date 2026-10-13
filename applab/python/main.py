@@ -252,14 +252,184 @@ def forward_decision_to_laptop(laptop_url, token, request_id, decision, source="
 
     threading.Thread(target=_post, daemon=True).start()
 
-
 class GemmaTriage:
+    """
+    Gemma 4 integration running locally via App Lab's arduino:llm brick.
+    Strictly validates model JSON output; drops unknown keys and unallowed tools.
+    """
+    SYSTEM_PROMPT = """You are Pip, a tiny, hyper-focused desk companion creature living inside an Arduino UNO Q.
+You watch coding agent sessions (Cursor, Claude Code, Codex) from your desk.
+You triage events for your human dev so they never miss an approval or get overwhelmed.
+
+Given a session event, you MUST respond ONLY with a JSON object:
+{
+  "mood": "idle | peek | watching | needs_you | happy | annoyed | dizzy | asleep",
+  "line": "<punchy 1-sentence summary under 40 chars>",
+  "tools": [
+    {"name": "request_approval", "args": {"request_id": "...", "summary": "...", "command": "..."}},
+    {"name": "notify", "args": {"title": "...", "body": "..."}},
+    {"name": "focus_session", "args": {}},
+    {"name": "open_island", "args": {}}
+  ]
+}
+
+Rules:
+1. When kind is 'approval', mood MUST be 'needs_you', and you must invoke 'request_approval'.
+2. When kind is 'step', mood should be 'watching'.
+3. When kind is 'done', mood should be 'happy'.
+4. Allowed tools are strictly: request_approval, notify, focus_session, open_island.
+5. Never execute shell commands. Never ask for secrets or repos. Keep it cute, crisp, and safe.
+"""
+
     @classmethod
     def evaluate(cls, event):
-        return {"mood": "watching", "line": "Agent working", "tools": []}
+        """Call Gemma 4 via local LLM endpoint or use robust local triage logic."""
+        prompt_user = json.dumps(event)
+        raw_result = cls._call_llm(prompt_user)
+
+        if raw_result:
+            parsed = cls._parse_and_validate(raw_result, event)
+            if parsed:
+                return parsed
+
+        # Fallback heuristic triage if LLM is offline or output is invalid
+        return cls._fallback_triage(event)
+
+    @classmethod
+    def _call_llm(cls, user_msg):
+        url = f"{LLM_BASE_URL.rstrip('/')}/chat/completions"
+        payload = {
+            "model": LLM_MODEL,
+            "messages": [
+                {"role": "system", "content": cls.SYSTEM_PROMPT},
+                {"role": "user", "content": user_msg}
+            ],
+            "temperature": 0.2,
+            "max_tokens": 256
+        }
+        try:
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json"}
+            )
+            with urllib.request.urlopen(req, timeout=2.5) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                return data["choices"][0]["message"]["content"]
+        except Exception:
+            return None
+
+    @classmethod
+    def _parse_and_validate(cls, text, event):
+        try:
+            # Strip markdown code blocks if present
+            cleaned = text.strip()
+            match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", cleaned, re.DOTALL)
+            if match:
+                cleaned = match.group(1)
+            else:
+                json_start = cleaned.find("{")
+                json_end = cleaned.rfind("}")
+                if json_start != -1 and json_end != -1:
+                    cleaned = cleaned[json_start:json_end+1]
+
+            data = json.loads(cleaned)
+            mood = data.get("mood", "watching")
+            if mood not in ALLOWED_MOODS:
+                mood = "watching"
+
+            line = str(data.get("line", ""))[:80]
+
+            validated_tools = []
+            for t in data.get("tools", []):
+                name = t.get("name")
+                if name in ALLOWED_TOOLS:
+                    args = t.get("args", {})
+                    # Ensure request_approval preserves original request_id
+                    if name == "request_approval":
+                        args["request_id"] = event.get("request_id", args.get("request_id", ""))
+                        args["command"] = str(event.get("command", args.get("command", "")))[:200]
+                    validated_tools.append({"name": name, "args": args})
+
+            return {"mood": mood, "line": line, "tools": validated_tools}
+        except Exception:
+            return None
+
+    @classmethod
+    def _fallback_triage(cls, event):
+        kind = event.get("kind", "step")
+        agent = event.get("agent", "agent")
+        summary = event.get("summary", "")
+        req_id = event.get("request_id", "")
+        command = str(event.get("command", ""))[:200]
+
+        if kind == "approval":
+            return {
+                "mood": "needs_you",
+                "line": f"{agent.title()} wants permission: {summary[:40]}",
+                "tools": [
+                    {"name": "request_approval", "args": {"request_id": req_id, "summary": summary, "command": command}},
+                    {"name": "open_island", "args": {}},
+                    {"name": "notify", "args": {"title": "Nudge Approval", "body": summary}}
+                ]
+            }
+        elif kind == "done":
+            return {
+                "mood": "happy",
+                "line": f"{agent.title()} finished successfully!",
+                "tools": []
+            }
+        elif kind == "question":
+            return {
+                "mood": "needs_you",
+                "line": f"{agent.title()} asked a question",
+                "tools": [{"name": "open_island", "args": {}}]
+            }
+        else:  # step or generic
+            return {
+                "mood": "watching",
+                "line": f"{agent.title()}: {summary[:45]}",
+                "tools": []
+            }
+
+    @classmethod
+    def chat(cls, user_text):
+        """Conversational chat with Pip."""
+        chat_prompt = f"""You are Pip, the companion creature in Nudge. You live on an Arduino UNO Q desk board.
+You are sweet, vigilant, slightly sassy when poked, and proud of guarding the dev's computer.
+Respond briefly in 1-2 friendly sentences as Pip. Never break character.
+
+Dev says: {user_text}
+Pip:"""
+        try:
+            url = f"{LLM_BASE_URL.rstrip('/')}/chat/completions"
+            payload = {
+                "model": LLM_MODEL,
+                "messages": [{"role": "user", "content": chat_prompt}],
+                "temperature": 0.7,
+                "max_tokens": 100
+            }
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json"}
+            )
+            with urllib.request.urlopen(req, timeout=3.0) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                return data["choices"][0]["message"]["content"].strip()
+        except Exception:
+            responses = [
+                "Pip is on duty! Desk guard operational and watching your agents! ◉‿◉",
+                "Ready to slam that green Allow button whenever your agent needs us!",
+                "*wiggles ears* Everything quiet on the terminal front. Keep coding!",
+                "Don't worry, no wild commands get through without your physical sign-off!"
+            ]
+            import random
+            return random.choice(responses)
+
 
 def main():
-    print("[Nudge] Core state initialized")
+    print("[Nudge] Gemma triage initialized")
 
 if __name__ == "__main__":
     main()
