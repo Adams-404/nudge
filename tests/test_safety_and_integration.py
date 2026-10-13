@@ -212,13 +212,19 @@ class SecurityProtocolVerification(unittest.TestCase):
 
         # Launch hook in subprocess
         p_hook = subprocess.Popen(hook_cmd, env=hook_env)
-        time.sleep(1.0)
 
-        # Verify board has active_request
-        with urllib.request.urlopen(f"http://127.0.0.1:{self.board_port}/api/status") as r:
-            st = json.loads(r.read())
-            self.assertEqual(st.get("mood"), "needs_you")
-            self.assertIsNotNone(st.get("active_request"))
+        # Poll for the board to pick up the request (LLM triage can take
+        # seconds on the real UNO Q, so never rely on a fixed sleep).
+        deadline = time.time() + 10.0
+        st = None
+        while time.time() < deadline:
+            with urllib.request.urlopen(f"http://127.0.0.1:{self.board_port}/api/status") as r:
+                st = json.loads(r.read())
+            if st.get("mood") == "needs_you" and st.get("active_request"):
+                break
+            time.sleep(0.2)
+        self.assertEqual(st.get("mood"), "needs_you")
+        self.assertIsNotNone(st.get("active_request"))
 
         # Send Allow decision from board
         dec_url = f"http://127.0.0.1:{self.board_port}/api/decision"

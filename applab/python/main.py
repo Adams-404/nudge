@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
 Nudge - Board Agent for Arduino UNO Q
-Runs on the board's Linux MPU alongside local Gemma 4 (arduino:llm brick).
+Runs on the board's Linux MPU alongside local Gemma 3 1B (arduino:llm brick).
 
 Responsibilities:
 1. Web UI server on port 7000 (Pip character, chat, demo mode, approvals).
 2. Laptop protocol on port 8766 (and 7000): session events, pairing, decisions.
-3. Gemma 4 triage engine: analyzes agent hooks, outputs mood + strict tool JSON.
+3. Gemma 3 1B triage engine: analyzes agent hooks, outputs mood + strict tool JSON.
 4. Bridge RPC with MCU: controls LED matrix face, receives physical buttons & pokes.
 """
 
@@ -35,9 +35,9 @@ ASSETS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "asse
 DATA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data"))
 PAIRING_FILE = os.path.join(DATA_DIR, "pairing.json")
 
-# LLM endpoint (default to App Lab's local llama.cpp / Gemma 4 endpoint)
-LLM_BASE_URL = os.environ.get("LLM_BASE_URL", "http://127.0.0.1:8080/v1")
-LLM_MODEL = os.environ.get("LLM_MODEL", "llamacpp:gemma-4-e2b")
+# LLM endpoint (default to App Lab's local llama.cpp / Gemma endpoint)
+LLM_BASE_URL = os.environ.get("LLM_BASE_URL", "http://llamacpp-models-runner:9999/v1")
+LLM_MODEL = os.environ.get("LLM_MODEL", "llamacpp:gemma-3-1b-it-Q4_0")
 
 # Allowed moods
 ALLOWED_MOODS = {"idle", "peek", "watching", "needs_you", "happy", "annoyed", "dizzy", "asleep"}
@@ -254,7 +254,7 @@ def forward_decision_to_laptop(laptop_url, token, request_id, decision, source="
 
 class GemmaTriage:
     """
-    Gemma 4 integration running locally via App Lab's arduino:llm brick.
+    Gemma 3 1B integration running locally via App Lab's arduino:llm brick.
     Strictly validates model JSON output; drops unknown keys and unallowed tools.
     """
     SYSTEM_PROMPT = """You are Pip, a tiny, hyper-focused desk companion creature living inside an Arduino UNO Q.
@@ -283,7 +283,7 @@ Rules:
 
     @classmethod
     def evaluate(cls, event):
-        """Call Gemma 4 via local LLM endpoint or use robust local triage logic."""
+        """Call Gemma 3 1B via local LLM endpoint or use robust local triage logic."""
         prompt_user = json.dumps(event)
         raw_result = cls._call_llm(prompt_user)
 
@@ -295,9 +295,71 @@ Rules:
         # Fallback heuristic triage if LLM is offline or output is invalid
         return cls._fallback_triage(event)
 
+    # Candidate App Lab llama.cpp endpoints (container hostname first, then localhost fallbacks)
+    CANDIDATE_URLS = [
+        f"{LLM_BASE_URL.rstrip('/')}/chat/completions",
+        "http://127.0.0.1:8080/v1/chat/completions",
+        "http://127.0.0.1:9999/v1/chat/completions",
+        "http://localhost:11434/v1/chat/completions",
+        "http://llamacpp-models-runner:9999/v1/chat/completions"
+    ]
+    # Endpoint that last answered successfully, and hosts known to be unreachable
+    _working_url = None
+    _dead_hosts = {}
+    DEAD_HOST_TTL = 60.0
+
+    @classmethod
+    def _host_of(cls, url):
+        try:
+            return urlparse(url).hostname or url
+        except Exception:
+            return url
+
+    @classmethod
+    def _is_dead(cls, url):
+        host = cls._host_of(url)
+        retry_at = cls._dead_hosts.get(host)
+        if retry_at is None:
+            return False
+        if time.time() >= retry_at:
+            cls._dead_hosts.pop(host, None)
+            return False
+        return True
+
+    @classmethod
+    def _mark_dead(cls, url):
+        cls._dead_hosts[cls._host_of(url)] = time.time() + cls.DEAD_HOST_TTL
+
+    @classmethod
+    def _llm_urls(cls):
+        urls = []
+        if cls._working_url:
+            urls.append(cls._working_url)
+        for u in cls.CANDIDATE_URLS:
+            if u not in urls:
+                urls.append(u)
+        return [u for u in urls if not cls._is_dead(u)]
+
+    @classmethod
+    def _post_chat(cls, url, payload, timeout):
+        try:
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json"}
+            )
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+            cls._working_url = url
+            return data["choices"][0]["message"]["content"]
+        except Exception:
+            # Endpoint unreachable or model unavailable: remember it so we
+            # don't burn multi-second DNS/connection delays on every event.
+            cls._mark_dead(url)
+            return None
+
     @classmethod
     def _call_llm(cls, user_msg):
-        url = f"{LLM_BASE_URL.rstrip('/')}/chat/completions"
         payload = {
             "model": LLM_MODEL,
             "messages": [
@@ -307,17 +369,11 @@ Rules:
             "temperature": 0.2,
             "max_tokens": 256
         }
-        try:
-            req = urllib.request.Request(
-                url,
-                data=json.dumps(payload).encode("utf-8"),
-                headers={"Content-Type": "application/json"}
-            )
-            with urllib.request.urlopen(req, timeout=2.5) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-                return data["choices"][0]["message"]["content"]
-        except Exception:
-            return None
+        for url in cls._llm_urls():
+            content = cls._post_chat(url, payload, timeout=2.5)
+            if content is not None:
+                return content
+        return None
 
     @classmethod
     def _parse_and_validate(cls, text, event):
@@ -401,31 +457,24 @@ Respond briefly in 1-2 friendly sentences as Pip. Never break character.
 
 Dev says: {user_text}
 Pip:"""
-        try:
-            url = f"{LLM_BASE_URL.rstrip('/')}/chat/completions"
-            payload = {
-                "model": LLM_MODEL,
-                "messages": [{"role": "user", "content": chat_prompt}],
-                "temperature": 0.7,
-                "max_tokens": 100
-            }
-            req = urllib.request.Request(
-                url,
-                data=json.dumps(payload).encode("utf-8"),
-                headers={"Content-Type": "application/json"}
-            )
-            with urllib.request.urlopen(req, timeout=3.0) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-                return data["choices"][0]["message"]["content"].strip()
-        except Exception:
-            responses = [
-                "Pip is on duty! Desk guard operational and watching your agents! ◉‿◉",
-                "Ready to slam that green Allow button whenever your agent needs us!",
-                "*wiggles ears* Everything quiet on the terminal front. Keep coding!",
-                "Don't worry, no wild commands get through without your physical sign-off!"
-            ]
-            import random
-            return random.choice(responses)
+        payload = {
+            "model": LLM_MODEL,
+            "messages": [{"role": "user", "content": chat_prompt}],
+            "temperature": 0.7,
+            "max_tokens": 100
+        }
+        for url in cls._llm_urls():
+            reply = cls._post_chat(url, payload, timeout=3.0)
+            if reply is not None:
+                return reply.strip()
+        responses = [
+            "Pip is on duty! Desk guard operational and watching your agents! ◉‿◉",
+            "Ready to slam that green Allow button whenever your agent needs us!",
+            "*wiggles ears* Everything quiet on the terminal front. Keep coding!",
+            "Don't worry, no wild commands get through without your physical sign-off!"
+        ]
+        import random
+        return random.choice(responses)
 
 class NudgeHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
@@ -617,7 +666,7 @@ class NudgeHandler(BaseHTTPRequestHandler):
             self.send_json(200, {"status": "poked", "mood": state.mood})
             return
 
-        # 6. Interactive Chat with Pip / Gemma 4
+        # 6. Interactive Chat with Pip / Gemma 3 1B
         if path == "/api/chat":
             user_msg = data.get("message", "")
             reply = GemmaTriage.chat(user_msg)
@@ -637,7 +686,7 @@ class NudgeHandler(BaseHTTPRequestHandler):
         self.send_json(404, {"error": "Not found"})
 
     def process_event(self, event):
-        """Pass event through Gemma 4 triage and apply mood and tools."""
+        """Pass event through Gemma 3 1B triage and apply mood and tools."""
         with state.lock:
             state.recent_events.append(event)
             if len(state.recent_events) > 30:
@@ -781,7 +830,7 @@ def main():
  | .` || || / _` / _` / -_) 
  |_|\_| \_,_\__,_\__, \___| 
                  |___/     
- Nudge: Gemma 4 Desk Companion for Coding Agents
+ Nudge: Gemma 3 1B Desk Companion for Coding Agents
 """)
     print(f"Platform: {'UNO Q (Bridge Active)' if HAS_BRIDGE else 'Desktop / Standalone Mode'}")
     print(f"Web UI: http://localhost:{PORT_WEB}")

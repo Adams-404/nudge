@@ -1,7 +1,7 @@
 ---
-title: "Nudge: Meet Pip, Your Physical Desk Companion for Coding Agents (Powered by Gemma 4 & Arduino UNO Q)"
+title: "Nudge: Meet Pip, Your Physical Desk Companion for Coding Agents (Powered by Gemma 3 1B & Arduino UNO Q)"
 published: false
-description: "A physical desk buddy for Cursor, Claude Code, and Codex. Gemma 4 runs locally on an Arduino UNO Q; an Allow/Deny button on your desk guards your code."
+description: "A physical desk buddy for Cursor, Claude Code, and Codex. Gemma 3 1B runs locally on an Arduino UNO Q; an Allow/Deny button on your desk guards your code."
 tags: hacktoberfest, arduino, gemma, ai
 cover_image: https://raw.githubusercontent.com/Adams-404/nudge/main/assets/cover.png
 canonical_url: https://github.com/Adams-404/nudge
@@ -10,7 +10,7 @@ canonical_url: https://github.com/Adams-404/nudge
 *Submitting for Hacktoberfest Week 2: **Side Hustle** (Due Oct 18, 2026)*  
 *Categories Entered:*
 - 🏆 **Best Use of Arduino** (Arduino UNO Q, MPU Linux + Zephyr MCU, RouterBridge RPC, 12x8 LED Matrix, physical Allow/Deny buttons, importable App Lab App).
-- 🏆 **Best Use of Gemma** (Gemma 4 running locally on-board via `arduino:llm` / llama.cpp E2B, strict validated tool calling JSON, zero-cloud privacy architecture).
+- 🏆 **Best Use of Gemma** (Gemma 3 1B running locally on-board via `arduino:llm` / llama.cpp, strict validated tool calling JSON, zero-cloud privacy architecture).
 
 ---
 
@@ -36,7 +36,7 @@ Meet **Nudge**, and his physical resident, **Pip**.
 
 Nudge is an original dual-system product:
 
-- **On your desk:** An **Arduino UNO Q** running Arduino App Lab. The Linux MPU runs **Gemma 4 E2B locally** alongside an interactive Web UI on port 7000. The Zephyr MCU drives a 12x8 LED-matrix face and listens for physical button inputs.
+- **On your desk:** An **Arduino UNO Q** running Arduino App Lab. The Linux MPU runs **Gemma 3 1B locally** alongside an interactive Web UI on port 7000. The Zephyr MCU drives a 12x8 LED-matrix face and listens for physical button inputs.
 - **On your laptop:** A featherweight background daemon and a sleek Wayland/X11 top-edge island. It intercepts hook events from Claude Code or Cursor, sanitizes them, and holds permission requests until a decision arrives.
 
 ```
@@ -44,7 +44,7 @@ Nudge is an original dual-system product:
  ┌─────────────────┐                     ┌────────────────────────┐
  │  Cursor/Claude  │                     │  Linux MPU (App Lab)   │
  │   Agent Hook    │                     │  ┌──────────────────┐  │
- └────────┬────────┘                     │  │ Gemma 4 (Local)  │  │
+ └────────┬────────┘                     │  │ Gemma 3 1B (Local)  │  │
           │ JSON                         │  │  Triage Engine   │  │
           ▼                              │  └────────┬─────────┘  │
  ┌─────────────────┐    LAN POST         │           │ Tool JSON  │
@@ -63,15 +63,15 @@ Nudge is an original dual-system product:
 
 ---
 
-## 3. Why Local Gemma 4 on the Board? (Privacy by Physics)
+## 3. Why Local Gemma 3 1B on the Board? (Privacy by Physics)
 
 Sending your proprietary codebase or raw terminal command logs to a 3rd-party cloud LLM just to show a desktop notification is an unacceptable security risk for many teams.
 
 **Nudge is local-first and privacy-preserving:**
 
-1. **Gemma 4 Runs on the Board:** Using the Arduino App Lab `arduino:llm` brick, Gemma 4 E2B (~3.3 GB) executes entirely on the UNO Q's hardware via llama.cpp.
+1. **Gemma 3 1B Runs on the Board:** Using the Arduino App Lab `arduino:llm` brick, Gemma 3 1B (~700 MB in Q4_0) executes entirely on the UNO Q's hardware via llama.cpp.
 2. **Summaries, Not Secrets:** The laptop sidecar strips environmental variables and truncates commands to 200 characters before transmitting.
-3. **Strict Validated Tool Calling:** Gemma 4 acts as a **character + triage engine**. Python validates its output against a strict JSON schema:
+3. **Strict Validated Tool Calling:** Gemma 3 1B acts as a **character + triage engine**. Python validates its output against a strict JSON schema:
 
 ```json
 {
@@ -131,7 +131,7 @@ Hacktoberfest Week 2's theme is **Side Hustle**. Could Nudge be a viable develop
 
 - **The Desk Companion Craze:** From Cyberpunk status monitors to Tidbyt displays, developers love physical desk accessories that reflect their digital state.
 - **Agent Fatigue is Growing:** As coding agents become the standard workflow for senior engineers, the cognitive friction of alt-tabbing to approve `git push` or `pytest` is palpable.
-- **The Hardware Kit:** An injection-molded acrylic case shaped like Pip, an Arduino UNO Q preloaded with Nudge and Gemma 4, and two arcade-grade mechanical pushbuttons. Devs gladly pay $69–$99 for ergonomic and desk-productivity hardware that saves 15 minutes of context-switching daily.
+- **The Hardware Kit:** An injection-molded acrylic case shaped like Pip, an Arduino UNO Q preloaded with Nudge and Gemma 3 1B, and two arcade-grade mechanical pushbuttons. Devs gladly pay $69–$99 for ergonomic and desk-productivity hardware that saves 15 minutes of context-switching daily.
 - **Open Standards:** Because Nudge imports as a standard `.zip` via Arduino App Lab, anyone can customize Pip's expressions, add new sensors (like an ultrasonic distance sensor that wakes Pip up when you sit down), or change the triage prompt.
 
 ---
@@ -165,7 +165,7 @@ We built Nudge so judges can experience the full magic without installing agent 
 
 ## 7. What We Learned
 
-- **Small Models Can Be Brilliant Character Actors:** You don't need a 70B parameter monster to build a delightful AI agent. Gemma 4 E2B is fast, runs on embedded hardware, and when given tight JSON schema constraints, excels at contextual triage.
+- **Small Models Can Be Brilliant Character Actors:** You don't need a 70B parameter monster to build a delightful AI agent. Gemma 3 1B is fast, runs on embedded hardware, and when given tight JSON schema constraints, excels at contextual triage.
 - **Tactile Feedback Beats Screen Notifications:** There is something profoundly satisfying about physically slapping a real button on your desk to push code to GitHub. It restores agency and intentionality to autonomous workflows.
 
 Check out the code, import the App Lab zip, and let us know what you think:  

@@ -3,10 +3,10 @@
 # ◉ Nudge
 
 **A desk + laptop companion for coding agents on the Arduino UNO Q.**  
-*Gemma 4 runs locally on the board as the triage brain. A physical Allow/Deny button on your desk guards your machine.*
+*Gemma 3 1B runs locally on the board as the triage brain. A physical Allow/Deny button on your desk guards your machine.*
 
 [![Arduino UNO Q](https://img.shields.io/badge/Arduino-UNO%20Q%20(App%20Lab)-00979D?logo=arduino&logoColor=white)](https://applab.arduino.cc)
-[![Gemma 4](https://img.shields.io/badge/Model-Gemma%204%20E2B%20(Local)-4285F4?logo=google&logoColor=white)](https://ai.google.dev/gemma)
+[![Gemma 3 1B](https://img.shields.io/badge/Model-Gemma%203%201B%20(Local)-4285F4?logo=google&logoColor=white)](https://ai.google.dev/gemma)
 [![Linux Wayland / X11](https://img.shields.io/badge/Platform-Linux%20%7C%20Wayland%20%7C%20X11-FCC624?logo=linux&logoColor=black)](https://github.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Hacktoberfest 2026](https://img.shields.io/badge/Hacktoberfest%202026-Side%20Hustle-FF7518?logo=hacktoberfest&logoColor=white)](https://hacktoberfest.com)
@@ -25,10 +25,10 @@ When coding agents (Claude Code, Cursor, Codex, Antigravity) run in the backgrou
 
 **Nudge** moves your agent's permission gate from a hidden terminal tab to your physical desk:
 
-- **Desk (Arduino UNO Q):** Meets **Pip**, a vigilant little desk creature. His 12x8 LED-matrix face reacts to your agent's state in real-time. Gemma 4 runs directly on the board's Linux MPU via the App Lab `arduino:llm` brick, triaging incoming events and keeping the gate closed until you press the **physical green Allow button**.
+- **Desk (Arduino UNO Q):** Meets **Pip**, a vigilant little desk creature. His 12x8 LED-matrix face reacts to your agent's state in real-time. Gemma 3 1B runs directly on the board's Linux MPU via the App Lab `arduino:llm` brick, triaging incoming events and keeping the gate closed until you press the **physical green Allow button**.
 - **Laptop (Sidecar & Island):** A top-edge island for Linux (Wayland / X11) and a universal hook watcher. It intercepts agent actions, strips confidential environment variables, compresses commands into safe 1-liners, and binds approvals strictly to unique request IDs.
 
-Gemma 4 is the **brain on the board**. Your laptop is the **hands with an allowlist**.
+Gemma 3 1B is the **brain on the board**. Your laptop is the **hands with an allowlist**.
 
 ---
 
@@ -46,7 +46,7 @@ flowchart LR
 
   subgraph board [Arduino UNO Q]
     Py["Python Agent (Port 7000 / 8766)"]
-    Gemma["Local Gemma 4 E2B (llama.cpp)"]
+    Gemma["Local Gemma 3 1B (llama.cpp)"]
     MCU["MCU Sketch (Bridge RPC)"]
     Matrix["12x8 LED Matrix Face"]
     Buttons["Physical Allow / Deny Pins"]
@@ -68,9 +68,9 @@ flowchart LR
 
 ---
 
-## The AI Brain: Gemma 4 on the Board
+## The AI Brain: Gemma 3 1B on the Board
 
-Pip's brain is **Gemma 4**, running locally on the Arduino UNO Q via the App Lab `arduino:llm` brick.
+Pip's brain is **Gemma 3 1B**, running locally on the Arduino UNO Q via the App Lab `arduino:llm` brick.
 
 ```
        RAW AGENT HOOK
@@ -85,7 +85,7 @@ Pip's brain is **Gemma 4**, running locally on the Arduino UNO Q via the App Lab
 ┌────────────────────────┐
 │  Arduino Linux MPU     │
 │  ┌──────────────────┐  │
-│  │ Gemma 4 E2B      │  │ ── Runs locally on board via llama.cpp
+│  │ Gemma 3 1B      │  │ ── Runs locally on board via llama.cpp
 │  │ (arduino:llm)    │  │
 │  └────────┬─────────┘  │
 │           │ Strictly Validated Tool JSON
@@ -103,8 +103,8 @@ Pip's brain is **Gemma 4**, running locally on the Arduino UNO Q via the App Lab
 ```
 
 ### Where the Brain Lives in Code
-- **Model Declaration:** [`applab/app.yaml`](file:///home/adam/Projects/nudge/applab/app.yaml) binds `arduino:llm` (`llamacpp:gemma-4-e2b`) and `arduino:web_ui` on port 7000.
-- **Triage & Validation Engine:** [`applab/python/main.py`](file:///home/adam/Projects/nudge/applab/python/main.py) hosts the `GemmaTriage` class. It prompts Gemma 4 with Pip's character persona and parses tool JSON.
+- **Model Declaration:** [`applab/app.yaml`](file:///home/adam/Projects/nudge/applab/app.yaml) binds `arduino:llm` (`llamacpp:gemma-3-1b-it-Q4_0`) and `arduino:web_ui` on port 7000.
+- **Triage & Validation Engine:** [`applab/python/main.py`](file:///home/adam/Projects/nudge/applab/python/main.py) hosts the `GemmaTriage` class. It prompts Gemma 3 1B with Pip's character persona and parses tool JSON.
 - **Strict Allowlist:** The model can only emit `request_approval`, `notify`, `focus_session`, and `open_island`. It has no shell execution tool.
 - **Local Testing:** You can test with any local LLM server on your laptop (e.g. Ollama via `export LLM_BASE_URL="http://localhost:11434/v1"` and `export LLM_MODEL="gemma2:2b"`).
 
@@ -276,7 +276,7 @@ echo '{"kind":"approval","agent":"cursor","command":"npm publish","request_id":"
 
 - **Request ID Binding:** Every approval request is bound to a unique `request_id`. Stale decisions or late button presses are dropped.
 - **Sanitized Payloads:** The laptop sidecar strips secrets, tokens, and truncates commands to 200 characters before transmitting to the board.
-- **No Remote Shell:** Gemma 4 has no execution shell tool. It can only request approvals or dispatch allowlisted UI actions (`notify`, `focus_session`, `open_island`).
+- **No Remote Shell:** Gemma 3 1B has no execution shell tool. It can only request approvals or dispatch allowlisted UI actions (`notify`, `focus_session`, `open_island`).
 - **LAN-Only Pairing:** The sidecar only listens locally. Pairing is protected by a rotating 6-digit PIN and token authentication.
 
 ---
@@ -286,7 +286,7 @@ echo '{"kind":"approval","agent":"cursor","command":"npm publish","request_id":"
 ```
 ├── applab/                    # Importable Arduino App Lab Package
 │   ├── app.yaml              # App definition (bricks: arduino:llm, arduino:web_ui)
-│   ├── python/main.py        # Python agent: Gemma 4 triage, Bridge RPC, Web UI
+│   ├── python/main.py        # Python agent: Gemma 3 1B triage, Bridge RPC, Web UI
 │   ├── sketch/               # MCU code: 12x8 LED Matrix face & button debouncing
 │   │   ├── sketch.ino
 │   │   └── sketch.yaml
@@ -316,7 +316,7 @@ echo '{"kind":"approval","agent":"cursor","command":"npm publish","request_id":"
 
 ## Credits & Inspiration
 
-- **Concept Inspiration:** Inspired by [Coucou](https://github.com/Louis-CFM/coucou) by Louis Raillé. Nudge is a clean-room, original implementation built specifically for physical Arduino hardware, local Gemma 4 inference, and the Arduino App Lab ecosystem.
+- **Concept Inspiration:** Inspired by [Coucou](https://github.com/Louis-CFM/coucou) by Louis Raillé. Nudge is a clean-room, original implementation built specifically for physical Arduino hardware, local Gemma 3 1B inference, and the Arduino App Lab ecosystem.
 - **Character:** **Pip** is an original procedural Canvas 2D character created for Nudge.
 - **Author:** Built for Hacktoberfest 2026 (Week 2: Side Hustle).
 

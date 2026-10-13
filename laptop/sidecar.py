@@ -28,7 +28,7 @@ SIDECAR_PORT = int(os.environ.get("NUDGE_SIDECAR_PORT", 7474))
 CONFIG_DIR = os.path.expanduser("~/.config/nudge")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "pair.json")
 
-# Allowlisted tools that the board / Gemma 4 can ask the laptop to run
+# Allowlisted tools that the board / Gemma 3 1B can ask the laptop to run
 ALLOWED_TOOLS = {"notify", "focus_session", "open_island"}
 
 class LaptopSidecarState:

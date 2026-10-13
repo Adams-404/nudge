@@ -40,7 +40,7 @@ This guide walks through the exact 60-second demo path for judges evaluating **N
    * 3 rapid clicks: Pip wobbles side-to-side and gets `dizzy` (`X X` spinning eyes).
 3. **Chat:** Click **Chat with Pip** and ask:
    > *"What do you do?"*
-   * Gemma 4 on the board replies in character: *"Pip is on duty! Desk guard operational and watching your agents! ◉‿◉"*
+   * Gemma 3 1B on the board replies in character: *"Pip is on duty! Desk guard operational and watching your agents! ◉‿◉"*
 
 ---
 
@@ -86,4 +86,4 @@ python3 laptop/demo_session.py
 ---
 
 ### Step 6: 10-Second Pitch for Judges (00:55 - 01:00)
-> *"This is Nudge. It solves coding agent anxiety by turning an ignored terminal prompt into a tangible, physical gate on your desk. Gemma 4 runs completely on the board, ensuring zero code or secrets ever touch a third-party cloud. Physical computing meets agentic AI."*
+> *"This is Nudge. It solves coding agent anxiety by turning an ignored terminal prompt into a tangible, physical gate on your desk. Gemma 3 1B runs completely on the board, ensuring zero code or secrets ever touch a third-party cloud. Physical computing meets agentic AI."*

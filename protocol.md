@@ -1,6 +1,6 @@
 # Nudge protocol
 
-Laptop sidecar and the UNO Q app speak JSON over HTTP. Gemma 4 on the board never sees API keys, file bodies, or raw repos — only short summaries.
+Laptop sidecar and the UNO Q app speak JSON over HTTP. Gemma 3 1B on the board never sees API keys, file bodies, or raw repos — only short summaries.
 
 Pairing is off until the sidecar is started. The laptop prints a 6-digit code. Enter it on Pip's Web UI. After a match, the board stores a session token; the laptop stores the board URL. "Pair again" replaces the token.
 
