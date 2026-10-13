@@ -64,7 +64,24 @@ const uint32_t FRAME_ASLEEP[3] = {
     0b000000000000000011110000
 };
 
+// Hardware Pin Definitions
+const int PIN_BTN_ALLOW = 2; // Green / Allow button
+const int PIN_BTN_DENY  = 3; // Red / Deny button
+const int PIN_BTN_POKE  = 4; // Capacitive / Poke button
+
+const unsigned long DEBOUNCE_MS = 50;
+unsigned long lastAllowPressTime = 0;
+unsigned long lastDenyPressTime  = 0;
+unsigned long lastPokePressTime  = 0;
+
+int lastAllowState = HIGH;
+int lastDenyState  = HIGH;
+int lastPokeState  = HIGH;
+
 void setup() {
+    pinMode(PIN_BTN_ALLOW, INPUT_PULLUP);
+    pinMode(PIN_BTN_DENY,  INPUT_PULLUP);
+    pinMode(PIN_BTN_POKE,  INPUT_PULLUP);
     Serial.begin(115200);
     matrix.begin();
     matrix.loadFrame(FRAME_IDLE);
