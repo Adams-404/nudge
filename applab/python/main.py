@@ -18,7 +18,7 @@ import uuid
 import re
 import urllib.request
 import urllib.error
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import threading
 from urllib.parse import urlparse, parse_qs
 
@@ -765,7 +765,7 @@ def run_demo_simulation():
         state.notify_change("demo_finished")
 
 def run_server(port):
-    server = HTTPServer(("0.0.0.0", port), NudgeHandler)
+    server = ThreadingHTTPServer(("0.0.0.0", port), NudgeHandler)
     print(f"[Nudge] Serving on http://0.0.0.0:{port}")
     try:
         server.serve_forever()

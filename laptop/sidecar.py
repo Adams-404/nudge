@@ -19,7 +19,7 @@ import uuid
 import random
 import threading
 import subprocess
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse
 import urllib.request
 import urllib.error
@@ -357,7 +357,7 @@ class SidecarHandler(BaseHTTPRequestHandler):
         self.send_json(404, {"error": "Not found"})
 
 def run_server():
-    server = HTTPServer(("127.0.0.1", SIDECAR_PORT), SidecarHandler)
+    server = ThreadingHTTPServer(("127.0.0.1", SIDECAR_PORT), SidecarHandler)
     print(f"[Sidecar] Listening on http://127.0.0.1:{SIDECAR_PORT}")
     try:
         server.serve_forever()
