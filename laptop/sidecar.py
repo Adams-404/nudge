@@ -198,9 +198,177 @@ class LaptopSidecarState:
 
 state = LaptopSidecarState()
 
+class ToolExecutor:
+    """Allowlisted laptop hands."""
+    @staticmethod
+    def execute(tool_name, args):
+        if tool_name not in ALLOWED_TOOLS:
+            print(f"[Security] Denied unallowlisted tool: {tool_name}")
+            return False
+
+        if tool_name == "notify":
+            title = args.get("title", "Nudge")
+            body = args.get("body", "Coding agent needs you")
+            try:
+                subprocess.run(["notify-send", "-a", "Nudge", title, body], check=False)
+            except Exception:
+                pass
+            return True
+
+        elif tool_name == "focus_session":
+            # Attempt to bring terminal or editor to front on Linux
+            try:
+                subprocess.run(["wmctrl", "-a", "cursor"], check=False)
+            except Exception:
+                pass
+            return True
+
+        elif tool_name == "open_island":
+            if state.island_listener and state.active_request:
+                state.island_listener(state.active_request)
+            return True
+
+        return False
+
+class SidecarHandler(BaseHTTPRequestHandler):
+    def log_message(self, format, *args):
+        pass
+
+    def send_json(self, status_code, data):
+        self.send_response(status_code)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.end_headers()
+        self.wfile.write(json.dumps(data).encode("utf-8"))
+
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.end_headers()
+
+    def do_GET(self):
+        path = urlparse(self.path).path
+        if path == "/api/status":
+            with state.lock:
+                self.send_json(200, {
+                    "paired": state.paired,
+                    "pairing_code": state.pairing_code,
+                    "board_url": state.board_url,
+                    "active_request": state.active_request
+                })
+            return
+        self.send_json(404, {"error": "Not found"})
+
+    def do_POST(self):
+        path = urlparse(self.path).path
+        content_length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(content_length) if content_length > 0 else b"{}"
+
+        try:
+            data = json.loads(body.decode("utf-8"))
+        except Exception:
+            self.send_json(400, {"error": "Invalid JSON"})
+            return
+
+        # 1. Hook Ingestion from agent or CLI
+        if path == "/hook":
+            event = state.sanitize_event(data)
+            kind = event.get("kind", "step")
+
+            # If approval request: hold connection until decision is made
+            if kind == "approval":
+                req_id = event.get("request_id")
+                if not req_id:
+                    req_id = str(uuid.uuid4())
+                    event["request_id"] = req_id
+
+                ev = state.register_approval(req_id, event)
+                state.forward_to_board(event)
+
+                print(f"[Sidecar] Waiting for decision on request {req_id}...")
+                # Wait up to 300 seconds for decision
+                signaled = ev.wait(timeout=300.0)
+
+                with state.lock:
+                    entry = state.pending_approvals.pop(req_id, None)
+                    decision = entry["decision"] if entry and entry["decision"] else "deny"
+
+                if not signaled:
+                    decision = "deny"
+                    print(f"[Sidecar] Request {req_id} timed out. Defaulting to DENY.")
+
+                self.send_json(200, {
+                    "decision": decision,
+                    "request_id": req_id,
+                    "allowed": (decision in ["allow", "always"])
+                })
+            else:
+                # Asynchronous step or notification
+                state.forward_to_board(event)
+                self.send_json(200, {"status": "forwarded"})
+            return
+
+        # 2. Decision Received from Board or Island
+        if path == "/api/decision":
+            req_id = data.get("request_id")
+            decision = data.get("decision", "deny")
+            source = data.get("source", "board")
+
+            resolved = state.resolve_approval(req_id, decision, source=source)
+            if resolved:
+                if source == "island":
+                    # Forward decision to board so MCU face and Web UI update
+                    state.forward_decision_to_board(req_id, decision, source="island")
+                self.send_json(200, {"status": "applied", "request_id": req_id, "decision": decision})
+            else:
+                self.send_json(404, {"error": "Unknown or stale request_id"})
+            return
+
+        # 3. Pair Request from Board Web UI
+        if path == "/api/pair":
+            submitted_code = data.get("code")
+            board_url = data.get("board_url", "http://localhost:7000")
+
+            if submitted_code == state.pairing_code:
+                state.pair_with_board(board_url)
+                self.send_json(200, {"status": "paired", "token": state.session_token})
+            else:
+                self.send_json(401, {"error": "Invalid pairing code"})
+            return
+
+        # 4. Allowlisted Tool Dispatch
+        if path == "/api/tools":
+            tool_name = data.get("tool")
+            args = data.get("args", {})
+            success = ToolExecutor.execute(tool_name, args)
+            self.send_json(200, {"status": "executed" if success else "failed"})
+            return
+
+        # 5. Unpair
+        if path == "/api/unpair":
+            state.unpair()
+            self.send_json(200, {"status": "unpaired"})
+            return
+
+        self.send_json(404, {"error": "Not found"})
+
+def run_server():
+    server = HTTPServer(("127.0.0.1", SIDECAR_PORT), SidecarHandler)
+    print(f"[Sidecar] Listening on http://127.0.0.1:{SIDECAR_PORT}")
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        server.server_close()
+
 
 def main():
-    print("[Sidecar] Daemon initialized")
+    run_server()
 
 if __name__ == "__main__":
     main()
