@@ -366,8 +366,20 @@ def run_server():
     finally:
         server.server_close()
 
-
 def main():
+    print(r"""
+  _  _          _               ___ _     _                     
+ | \| | _  _ __| |__ _ ___     / __(_) __| |___ __ __ _ _ _ 
+ | .` || || / _` / _` / -_)    \__ \ |/ _` / -_) _/ _` | '_|
+ |_|\_| \_,_\__,_\__, \___|    |___/_|\__,_\___\__\__,_|_|  
+                 |___/                                      
+ Nudge Laptop Sidecar (Daemon & Hands)
+""")
+    print(f"Pairing PIN: [ {state.pairing_code} ]")
+    print(f"Board URL:   {state.board_url}")
+    print(f"Hook Port:   http://127.0.0.1:{SIDECAR_PORT}/hook")
+    print("\nKeep this running while using Cursor, Claude Code, or Codex.")
+
     run_server()
 
 if __name__ == "__main__":
