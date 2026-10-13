@@ -1,0 +1,13 @@
+.cache/
+data/
+__pycache__/
+*.pyc
+.venv/
+venv/
+dist/*.zip
+!dist/nudge-applab.zip
+*.egg-info/
+.pytest_cache/
+.DS_Store
+laptop/.nudge-pair.json
+applab/data/
