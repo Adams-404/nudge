@@ -669,9 +669,100 @@ class NudgeHandler(BaseHTTPRequestHandler):
 
         state.set_mood(mood, line)
 
-
 def run_demo_simulation():
-    pass
+    """Scripted 60-second judge demo showing complete end-to-end flow."""
+    with state.lock:
+        if state.demo_running:
+            return
+        state.demo_running = True
+
+    print("[Demo] Starting Nudge demo simulation sequence...")
+    try:
+        # 1. Wake up
+        state.set_mood("peek", "Pip spots a new coding agent starting...")
+        time.sleep(2.0)
+
+        # 2. Agent inspects code
+        event_1 = {
+            "kind": "step",
+            "agent": "cursor",
+            "summary": "Inspecting repository architecture and git status",
+            "project": "nudge",
+            "request_id": ""
+        }
+        triage_1 = GemmaTriage.evaluate(event_1)
+        state.set_mood(triage_1["mood"], triage_1["line"])
+        time.sleep(2.5)
+
+        # 3. Agent runs tests
+        event_2 = {
+            "kind": "step",
+            "agent": "cursor",
+            "summary": "Running pytest suite (34 passed)",
+            "project": "nudge",
+            "request_id": ""
+        }
+        triage_2 = GemmaTriage.evaluate(event_2)
+        state.set_mood(triage_2["mood"], triage_2["line"])
+        time.sleep(2.5)
+
+        # 4. Agent requests permission
+        demo_req_id = "demo-" + str(uuid.uuid4())[:8]
+        event_3 = {
+            "kind": "approval",
+            "agent": "cursor",
+            "request_id": demo_req_id,
+            "summary": "Cursor wants to run git push origin main",
+            "command": "git push origin main",
+            "project": "nudge"
+        }
+        triage_3 = GemmaTriage.evaluate(event_3)
+        with state.lock:
+            state.active_request = {
+                "request_id": demo_req_id,
+                "summary": "Cursor wants to run git push origin main",
+                "command": "git push origin main",
+                "agent": "cursor",
+                "project": "nudge",
+                "timestamp": time.time()
+            }
+        state.set_mood("needs_you", "Physical approval needed for git push!")
+        
+        # Give judges 5 seconds to click or tap Allow, or auto-allow if left unattended
+        wait_start = time.time()
+        while time.time() - wait_start < 5.0:
+            with state.lock:
+                if state.active_request is None:
+                    break
+            time.sleep(0.5)
+
+        # If still waiting, auto-simulate approval click
+        with state.lock:
+            if state.active_request:
+                state.active_request = None
+                print("[Demo] Auto-simulating physical Allow button press")
+
+        # 5. Happy reaction
+        state.set_mood("happy", "Approval granted! Agent pushing code!")
+        time.sleep(3.0)
+
+        # 6. Done
+        event_4 = {
+            "kind": "done",
+            "agent": "cursor",
+            "summary": "Git push complete! Changes live.",
+            "project": "nudge"
+        }
+        triage_4 = GemmaTriage.evaluate(event_4)
+        state.set_mood(triage_4["mood"], triage_4["line"])
+        time.sleep(3.0)
+
+        # 7. Settle to idle
+        state.set_mood("idle", "All quiet. Pip standing by.")
+    finally:
+        with state.lock:
+            state.demo_running = False
+        state.notify_change("demo_finished")
 
 def run_server(port):
     server = HTTPServer(("0.0.0.0", port), NudgeHandler)
