@@ -124,11 +124,161 @@
     ctx.restore();
   }
 
+  // Draw Eyes & Expressions
+  function drawPipFace(cx, cy, theme) {
+    ctx.save();
+    ctx.translate(cx, cy + floatOffset);
+
+    if (currentMood === 'dizzy') {
+      ctx.rotate(Math.sin(dizzyAngle) * 0.12);
+    }
+
+    const eyeSpacing = 42 * squish.x;
+    const eyeY = -10 * squish.y;
+    const eyeRadius = 18;
+
+    // Normalized pupil tracking relative to center
+    const dx = (mouse.x - cx) / 180;
+    const dy = (mouse.y - cy) / 180;
+    const pupilX = Math.max(-1, Math.min(1, dx)) * 7;
+    const pupilY = Math.max(-1, Math.min(1, dy)) * 6;
+
+    // 1. HAPPY EYES (^ ^)
+    if (currentMood === 'happy') {
+      ctx.strokeStyle = '#052e16';
+      ctx.lineWidth = 4.5;
+      ctx.lineCap = 'round';
+
+      // Left eye arc
+      ctx.beginPath();
+      ctx.arc(-eyeSpacing, eyeY, 14, Math.PI * 1.15, Math.PI * 1.85);
+      ctx.stroke();
+
+      // Right eye arc
+      ctx.beginPath();
+      ctx.arc(eyeSpacing, eyeY, 14, Math.PI * 1.15, Math.PI * 1.85);
+      ctx.stroke();
+
+      // Cheerful Smile
+      ctx.beginPath();
+      ctx.arc(0, eyeY + 18, 12, 0.1, Math.PI - 0.1);
+      ctx.stroke();
+
+    // 2. ASLEEP EYES (- - with Zs)
+    } else if (currentMood === 'asleep') {
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+
+      ctx.beginPath();
+      ctx.moveTo(-eyeSpacing - 12, eyeY);
+      ctx.lineTo(-eyeSpacing + 12, eyeY);
+      ctx.moveTo(eyeSpacing - 12, eyeY);
+      ctx.lineTo(eyeSpacing + 12, eyeY);
+      ctx.stroke();
+
+      // Floating Z
+      const zOffset = (Date.now() / 40) % 60;
+      ctx.font = '700 16px monospace';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.fillText('z', eyeSpacing + 22, eyeY - zOffset * 0.5);
+      ctx.font = '700 22px monospace';
+      ctx.fillText('Z', eyeSpacing + 32, eyeY - 20 - zOffset * 0.8);
+
+    // 3. ANNOYED EYES (straight narrow brows)
+    } else if (currentMood === 'annoyed') {
+      ctx.fillStyle = '#450a0a';
+      ctx.beginPath();
+      ctx.ellipse(-eyeSpacing, eyeY, eyeRadius * 0.9, 6, 0, 0, Math.PI * 2);
+      ctx.ellipse(eyeSpacing, eyeY, eyeRadius * 0.9, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Sulky mouth
+      ctx.strokeStyle = '#450a0a';
+      ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      ctx.moveTo(-10, eyeY + 24);
+      ctx.lineTo(10, eyeY + 22);
+      ctx.stroke();
+
+    // 4. DIZZY EYES (Spiral / Spinning crosses)
+    } else if (currentMood === 'dizzy') {
+      ctx.strokeStyle = '#3b0764';
+      ctx.lineWidth = 4.5;
+      ctx.lineCap = 'round';
+
+      [-eyeSpacing, eyeSpacing].forEach((ex) => {
+        ctx.save();
+        ctx.translate(ex, eyeY);
+        ctx.rotate(dizzyAngle * 3);
+        ctx.beginPath();
+        ctx.moveTo(-10, -10); ctx.lineTo(10, 10);
+        ctx.moveTo(10, -10); ctx.lineTo(-10, 10);
+        ctx.stroke();
+        ctx.restore();
+      });
+
+      // Wobble mouth
+      ctx.beginPath();
+      ctx.arc(0, eyeY + 24, 7, 0, Math.PI * 2);
+      ctx.stroke();
+
+    // 5. STANDARD / WATCHING / NEEDS_YOU (With Pupil Tracking & Blinking)
+    } else {
+      const isNeedsYou = currentMood === 'needs_you';
+      const isWatching = currentMood === 'watching';
+      const currentRadius = isNeedsYou ? eyeRadius * 1.15 : (isWatching ? eyeRadius * 1.05 : eyeRadius);
+
+      [-eyeSpacing, eyeSpacing].forEach((ex) => {
+        // Eye White
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        if (blink.isBlinking) {
+          ctx.ellipse(ex, eyeY, currentRadius, 2, 0, 0, Math.PI * 2);
+        } else {
+          ctx.arc(ex, eyeY, currentRadius, 0, Math.PI * 2);
+        }
+        ctx.fill();
+
+        // Pupil + Iris
+        if (!blink.isBlinking) {
+          ctx.fillStyle = isNeedsYou ? '#78350f' : '#0f172a';
+          ctx.beginPath();
+          ctx.arc(ex + pupilX, eyeY + pupilY, currentRadius * 0.58, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Cute specular highlight
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(ex + pupilX - 3, eyeY + pupilY - 3, 3.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+
+      // Cute mouth curve
+      ctx.strokeStyle = isNeedsYou ? '#78350f' : '#082f49';
+      ctx.lineWidth = 3.5;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      if (isNeedsYou) {
+        // Open surprised / concerned 'o'
+        ctx.ellipse(0, eyeY + 22, 6, 8, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      } else {
+        ctx.arc(0, eyeY + 18, 9, 0.2, Math.PI - 0.2);
+        ctx.stroke();
+      }
+    }
+
+    ctx.restore();
+  }
+
 
   function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const theme = MOOD_THEMES[currentMood] || MOOD_THEMES.idle;
     drawPipBody(180, 180, 150, 140, theme);
+    drawPipFace(180, 180, theme);
     requestAnimationFrame(animate);
   }
   animate();
