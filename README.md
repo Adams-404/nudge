@@ -68,15 +68,137 @@ flowchart LR
 
 ---
 
-## Why Gemma 4 on the Board?
+## The AI Brain: Gemma 4 on the Board
 
-1. **Zero Cloud Leakage:** Cloud LLMs should not read every local terminal command or hook payload. Gemma 4 E2B runs on-board via llama.cpp. Your raw repo code, files, and secrets never touch an external server.
-2. **Deterministic Tool Schema:** Gemma 4 outputs strict JSON with allowed tool definitions (`request_approval`, `notify`, `focus_session`, `open_island`). Any arbitrary shell commands or unrecognized tools are dropped by the Python validation layer.
-3. **Low-Latency Desk Triage:** Instead of full-blown reasoning models, Gemma 4 is optimized as a character + triage engine: compressing 200-character commands into legible desk one-liners (*"Cursor wants `git push`"*).
+Pip's brain is **Gemma 4**, running locally on the Arduino UNO Q via the App Lab `arduino:llm` brick.
+
+```
+       RAW AGENT HOOK
+  "git push origin main"
+            │
+            ▼
+┌────────────────────────┐
+│  Laptop Sidecar (Hands)│ ── Strips secrets, truncates to 200 chars
+└───────────┬────────────┘
+            │ POST /api/event
+            ▼
+┌────────────────────────┐
+│  Arduino Linux MPU     │
+│  ┌──────────────────┐  │
+│  │ Gemma 4 E2B      │  │ ── Runs locally on board via llama.cpp
+│  │ (arduino:llm)    │  │
+│  └────────┬─────────┘  │
+│           │ Strictly Validated Tool JSON
+│  ┌────────▼─────────┐  │
+│  │ Python Triage    │  │ ── Drops shell commands, validates schema
+│  └────────┬─────────┘  │
+└───────────┼────────────┘
+            │ RouterBridge RPC
+            ▼
+┌────────────────────────┐
+│  Zephyr MCU            │
+│  • 12x8 LED Matrix     │ ── Lights up animated emoji faces & blinks
+│  • Physical Buttons    │ ── Tactile Allow / Deny approval
+└────────────────────────┘
+```
+
+### Where the Brain Lives in Code
+- **Model Declaration:** [`applab/app.yaml`](file:///home/adam/Projects/nudge/applab/app.yaml) binds `arduino:llm` (`llamacpp:gemma-4-e2b`) and `arduino:web_ui` on port 7000.
+- **Triage & Validation Engine:** [`applab/python/main.py`](file:///home/adam/Projects/nudge/applab/python/main.py) hosts the `GemmaTriage` class. It prompts Gemma 4 with Pip's character persona and parses tool JSON.
+- **Strict Allowlist:** The model can only emit `request_approval`, `notify`, `focus_session`, and `open_island`. It has no shell execution tool.
+- **Local Testing:** You can test with any local LLM server on your laptop (e.g. Ollama via `export LLM_BASE_URL="http://localhost:11434/v1"` and `export LLM_MODEL="gemma2:2b"`).
 
 ---
 
-## Pip's Moods & LED Matrix
+## Does the Arduino Light Up Cute Emoji Faces? Yes! ◉‿◉
+
+The Arduino UNO Q has a built-in **12×8 LED Matrix** (96 red LEDs on the board). Pip's facial expressions light up dynamically on the physical hardware via [`applab/sketch/sketch.ino`](file:///home/adam/Projects/nudge/applab/sketch/sketch.ino).
+
+Here is how the physical LEDs light up for each mood:
+
+### 1. `idle` (Gentle Smile & Random Blink Cycle)
+Pip stands guard on your desk. Every 3–5 seconds, his eyelids drop for 180ms to blink naturally:
+```
+Open Eyes:                     Blink (180ms):
+. . . . . . . . . . . .        . . . . . . . . . . . .
+. . ■ ■ . . . . ■ ■ . .        . . . . . . . . . . . .
+. . ■ ■ . . . . ■ ■ . .        . . ■ ■ ■ ■ . . ■ ■ ■ ■
+. . . . . . . . . . . .        . . . . . . . . . . . .
+. ■ . . . . . . . . ■ .        . ■ . . . . . . . . ■ .
+. . ■ ■ ■ ■ ■ ■ ■ ■ . .        . . ■ ■ ■ ■ ■ ■ ■ ■ . .
+. . . . . . . . . . . .        . . . . . . . . . . . .
+. . . . . . . . . . . .        . . . . . . . . . . . .
+```
+
+### 2. `needs_you` (Attention Alert / Pulsing Flash)
+When your agent asks for permission (e.g. `git push`), the LED matrix alternates every 350ms between two frames, flashing an urgent attention signal across your desk:
+```
+Frame A (Pulsing Eyes):        Frame B (Flash):
+. ■ ■ ■ . . . . ■ ■ ■ .        . . . . . . . . . . . .
+. ■ ■ ■ . . . . ■ ■ ■ .        . ■ ■ ■ . . . . ■ ■ ■ .
+. ■ ■ ■ . . . . ■ ■ ■ .        . ■ ■ ■ . . . . ■ ■ ■ .
+. . . . . . . . . . . .        . . . . . . . . . . . .
+. ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ .        . . . . . . . . . . . .
+. . . . . . . . . . . .        . . . . . . . . . . . .
+. . . . . . . . . . . .        . . . . . . . . . . . .
+. . . . . . . . . . . .        . . . . . . . . . . . .
+```
+
+### 3. `happy` (Curved `^^` Victory Eyes)
+When you press the green **Allow** button or your agent completes its work:
+```
+. . ■ ■ . . . . ■ ■ . .
+. ■ . . ■ . . ■ . . ■ .
+■ . . . . ■ ■ . . . . ■
+. . . . . . . . . . . .
+. ■ . . . . . . . . ■ .
+. . ■ ■ ■ ■ ■ ■ ■ ■ . .
+. . . . . . . . . . . .
+. . . . . . . . . . . .
+```
+
+### 4. `annoyed` (Skeptical Flat Brows `- -`)
+When a command is denied or Pip is poked while working:
+```
+. . . . . . . . . . . .
+. ■ ■ ■ ■ . . ■ ■ ■ ■ .
+. . . . . . . . . . . .
+. . . . . . . . . . . .
+. . . . . . . . . . . .
+. . ■ ■ ■ ■ ■ ■ ■ ■ . .
+. . . . . . . . . . . .
+. . . . . . . . . . . .
+```
+
+### 5. `dizzy` (Spinning Crossed Eyes `X X`)
+Triggered when you poke Pip 3+ times in rapid succession:
+```
+. ■ . . ■ . . ■ . . ■ .
+. . ■ ■ . . . . ■ ■ . .
+. ■ . . ■ . . ■ . . ■ .
+. . . . . . . . . . . .
+. . . . . . . . . . . .
+. . ■ . ■ . ■ . ■ . . .
+. . . . . . . . . . . .
+. . . . . . . . . . . .
+```
+
+### 6. `asleep` (Closed Lids with `z Z`)
+When no agent sessions have been active:
+```
+. . . . . . . . . . ■ ■
+. . . . . . . . . . . ■
+. . ■ ■ ■ ■ . . ■ ■ ■ ■
+. . . . . . . . . . ■ ■
+. . . . . . . . . . . .
+. . . . . ■ ■ ■ ■ . . .
+. . . . . . . . . . . .
+. . . . . . . . . . . .
+```
+
+---
+
+## Mood State Reference
 
 | Mood | Expression | Behavior |
 |---|---|---|
