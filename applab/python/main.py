@@ -427,9 +427,291 @@ Pip:"""
             import random
             return random.choice(responses)
 
+class NudgeHandler(BaseHTTPRequestHandler):
+    def log_message(self, format, *args):
+        # Concise logging
+        pass
+
+    def send_json(self, status_code, data):
+        self.send_response(status_code)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        self.end_headers()
+        self.wfile.write(json.dumps(data).encode("utf-8"))
+
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        self.end_headers()
+
+    def do_GET(self):
+        parsed = urlparse(self.path)
+        path = parsed.path
+
+        if path == "/api/status":
+            self.send_json(200, state.get_status())
+            return
+
+        if path == "/api/stream":
+            self.handle_sse()
+            return
+
+        # Serve static assets for Web UI
+        if path == "/" or path == "":
+            path = "/index.html"
+
+        file_path = os.path.normpath(os.path.join(ASSETS_DIR, path.lstrip("/")))
+        if os.path.commonpath([ASSETS_DIR, file_path]) == ASSETS_DIR and os.path.isfile(file_path):
+            content_type = "text/plain"
+            if file_path.endswith(".html"):
+                content_type = "text/html"
+            elif file_path.endswith(".css"):
+                content_type = "text/css"
+            elif file_path.endswith(".js"):
+                content_type = "application/javascript"
+            elif file_path.endswith(".svg"):
+                content_type = "image/svg+xml"
+            elif file_path.endswith(".png"):
+                content_type = "image/png"
+
+            try:
+                with open(file_path, "rb") as f:
+                    content = f.read()
+                self.send_response(200)
+                self.send_header("Content-Type", content_type)
+                self.send_header("Content-Length", str(len(content)))
+                self.end_headers()
+                self.wfile.write(content)
+                return
+            except Exception as e:
+                self.send_json(500, {"error": str(e)})
+                return
+
+        self.send_json(404, {"error": "Not found"})
+
+    def handle_sse(self):
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "keep-alive")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+
+        import queue
+        q = queue.Queue()
+        state.add_listener(q)
+
+        # Send initial status
+        initial_msg = json.dumps({"type": "init", "status": state.get_status()})
+        self.wfile.write(f"data: {initial_msg}\n\n".encode("utf-8"))
+        self.wfile.flush()
+
+        try:
+            while True:
+                try:
+                    msg = q.get(timeout=20.0)
+                    self.wfile.write(f"data: {msg}\n\n".encode("utf-8"))
+                    self.wfile.flush()
+                except queue.Empty:
+                    # Keep-alive heartbeat
+                    self.wfile.write(b": heartbeat\n\n")
+                    self.wfile.flush()
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+        finally:
+            state.remove_listener(q)
+
+    def do_POST(self):
+        parsed = urlparse(self.path)
+        path = parsed.path
+
+        content_length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(content_length)
+        data = {}
+        if body:
+            try:
+                data = json.loads(body.decode("utf-8"))
+            except Exception:
+                self.send_json(400, {"error": "Invalid JSON"})
+                return
+
+        # 1. Pairing Handshake
+        if path == "/api/pair":
+            token = data.get("token")
+            laptop_url = data.get("laptop_url")
+            code = data.get("code")
+
+            if laptop_url and code:
+                # Reach out to laptop sidecar to verify code and exchange session token
+                try:
+                    pair_payload = json.dumps({"code": code, "board_url": f"http://localhost:{PORT_WEB}"}).encode("utf-8")
+                    req = urllib.request.Request(
+                        f"{laptop_url.rstrip('/')}/api/pair",
+                        data=pair_payload,
+                        headers={"Content-Type": "application/json"}
+                    )
+                    with urllib.request.urlopen(req, timeout=3.0) as resp:
+                        res_data = json.loads(resp.read().decode("utf-8"))
+                        token = res_data.get("token", token)
+                except Exception as e:
+                    print(f"[Pair] Warning contacting laptop sidecar: {e}")
+
+            if not token:
+                token = str(uuid.uuid4())
+
+            state.save_pairing(token, laptop_url)
+            print(f"[Pair] Paired with laptop sidecar at {laptop_url}")
+            self.send_json(200, {"status": "paired", "token": token})
+            return
+
+        # 2. Unpair
+        if path == "/api/unpair":
+            state.unpair()
+            self.send_json(200, {"status": "unpaired"})
+            return
+
+        # 3. Session Event from Laptop Sidecar
+        if path == "/api/event":
+            # Security verification
+            token = data.get("token")
+            if state.paired and state.pairing_token and token != state.pairing_token:
+                self.send_json(401, {"error": "Unauthorized token"})
+                return
+
+            event = data.get("event", {})
+            self.process_event(event)
+            self.send_json(200, {"status": "accepted"})
+            return
+
+        # 4. User Decision from Web UI or Island
+        if path == "/api/decision":
+            req_id = data.get("request_id")
+            decision = data.get("decision")  # "allow", "deny", "always"
+            source = data.get("source", "web_ui")
+
+            with state.lock:
+                req = state.active_request
+                token = state.pairing_token
+                laptop_url = state.laptop_url
+
+            if req and req.get("request_id") == req_id:
+                if laptop_url and token:
+                    forward_decision_to_laptop(laptop_url, token, req_id, decision, source=source)
+                with state.lock:
+                    state.active_request = None
+                new_mood = "happy" if decision in ["allow", "always"] else "annoyed"
+                state.set_mood(new_mood, f"Decision {decision} applied by {source}")
+                state.notify_change("decision")
+                self.send_json(200, {"status": "ok", "decision": decision})
+            else:
+                self.send_json(404, {"error": "Request ID not waiting or already resolved"})
+            return
+
+        # 5. Interactive Poke
+        if path == "/api/poke":
+            state.poke()
+            self.send_json(200, {"status": "poked", "mood": state.mood})
+            return
+
+        # 6. Interactive Chat with Pip / Gemma 4
+        if path == "/api/chat":
+            user_msg = data.get("message", "")
+            reply = GemmaTriage.chat(user_msg)
+            with state.lock:
+                state.chat_history.append({"role": "user", "text": user_msg})
+                state.chat_history.append({"role": "pip", "text": reply})
+            state.notify_change("chat")
+            self.send_json(200, {"reply": reply})
+            return
+
+        # 7. Demo Mode Trigger
+        if path == "/api/demo":
+            threading.Thread(target=run_demo_simulation, daemon=True).start()
+            self.send_json(200, {"status": "demo_started"})
+            return
+
+        self.send_json(404, {"error": "Not found"})
+
+    def process_event(self, event):
+        """Pass event through Gemma 4 triage and apply mood and tools."""
+        with state.lock:
+            state.recent_events.append(event)
+            if len(state.recent_events) > 30:
+                state.recent_events = state.recent_events[-30:]
+
+        triage = GemmaTriage.evaluate(event)
+        mood = triage.get("mood", "watching")
+        line = triage.get("line", "")
+        tools = triage.get("tools", [])
+
+        with state.lock:
+            state.one_liner = line
+
+        # Execute validated tools
+        for tool in tools:
+            name = tool.get("name")
+            args = tool.get("args", {})
+            if name == "request_approval":
+                with state.lock:
+                    state.active_request = {
+                        "request_id": args.get("request_id"),
+                        "summary": args.get("summary"),
+                        "command": args.get("command"),
+                        "agent": event.get("agent", "cursor"),
+                        "project": event.get("project", "workspace"),
+                        "timestamp": time.time()
+                    }
+                print(f"[Approval Required] {state.active_request['summary']} ({state.active_request['command']})")
+
+        state.set_mood(mood, line)
+
+
+def run_demo_simulation():
+    pass
+
+def run_server(port):
+    server = HTTPServer(("0.0.0.0", port), NudgeHandler)
+    print(f"[Nudge] Serving on http://0.0.0.0:{port}")
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        server.server_close()
 
 def main():
-    print("[Nudge] Gemma triage initialized")
+    print(r"""
+  _  _          _            
+ | \| | _  _ __| |__ _ ___  
+ | .` || || / _` / _` / -_) 
+ |_|\_| \_,_\__,_\__, \___| 
+                 |___/     
+ Nudge: Gemma 4 Desk Companion for Coding Agents
+""")
+    print(f"Platform: {'UNO Q (Bridge Active)' if HAS_BRIDGE else 'Desktop / Standalone Mode'}")
+    print(f"Web UI: http://localhost:{PORT_WEB}")
+    print(f"API Port: http://localhost:{PORT_API}")
+    print(f"Local Gemma Endpoint: {LLM_BASE_URL} ({LLM_MODEL})")
+
+    # Start primary Web server
+    t_web = threading.Thread(target=run_server, args=(PORT_WEB,), daemon=True)
+    t_web.start()
+
+    # If API port is different, start API listener as well
+    if PORT_API != PORT_WEB:
+        t_api = threading.Thread(target=run_server, args=(PORT_API,), daemon=True)
+        t_api.start()
+
+    # Keep main alive
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("\n[Nudge] Shutting down Pip agent.")
 
 if __name__ == "__main__":
     main()
