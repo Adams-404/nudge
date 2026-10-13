@@ -9,7 +9,7 @@ canonical_url: https://github.com/Adams-404/nudge
 
 *Submitting for Hacktoberfest Week 2: **Side Hustle** (Due Oct 18, 2026)*  
 *Categories Entered:*
-- 🏆 **Best Use of Arduino** (Arduino UNO Q, MPU Linux + Zephyr MCU, RouterBridge RPC, 12x8 LED Matrix, physical Allow/Deny buttons, importable App Lab App).
+- 🏆 **Best Use of Arduino** (Arduino UNO Q, MPU Linux + Zephyr MCU, RouterBridge RPC, 13x8 LED Matrix, physical Allow/Deny buttons, importable App Lab App).
 - 🏆 **Best Use of Gemma** (Gemma 3 1B running locally on-board via `arduino:llm` / llama.cpp, strict validated tool calling JSON, zero-cloud privacy architecture).
 
 ---
@@ -36,7 +36,7 @@ Meet **Nudge**, and his physical resident, **Pip**.
 
 Nudge is an original dual-system product:
 
-- **On your desk:** An **Arduino UNO Q** running Arduino App Lab. The Linux MPU runs **Gemma 3 1B locally** alongside an interactive Web UI on port 7000. The Zephyr MCU drives a 12x8 LED-matrix face and listens for physical button inputs.
+- **On your desk:** An **Arduino UNO Q** running Arduino App Lab. The Linux MPU runs **Gemma 3 1B locally** alongside an interactive Web UI on port 7000. The Zephyr MCU drives a 13x8 LED-matrix face and listens for physical button inputs.
 - **On your laptop:** A featherweight background daemon and a sleek Wayland/X11 top-edge island. It intercepts hook events from Claude Code or Cursor, sanitizes them, and holds permission requests until a decision arrives.
 
 ```
@@ -54,7 +54,7 @@ Nudge is an original dual-system product:
           │                              │           │ RPC        │
           │ Stale-proof                  │  ┌────────▼─────────┐  │
           │ Request ID                   │  │   MCU (Bridge)   │  │
-          │                              │  │ 12x8 LED Matrix  │  │
+          │                              │  │ 13x8 LED Matrix  │  │
           ▼                              │  │  Physical Green  │  │
  ┌─────────────────┐                     │  │   Allow Button   │  │
  │ Top-Edge Island │                     │  └──────────────────┘  │
@@ -119,7 +119,7 @@ void loop() {
 }
 ```
 
-When Python on the Linux MPU receives an agent hook, it calls `Bridge.call("set_mood", "needs_you")`. The MCU immediately starts pulsing the 12x8 LED matrix face. When you slap the green button, the MCU notifies Python, which transmits an atomic decision back to your laptop.
+When Python on the Linux MPU receives an agent hook, it calls `Bridge.call("set_mood", "needs_you")`. The MCU immediately starts pulsing the 13x8 LED matrix face. When you slap the green button, the MCU notifies Python, which transmits an atomic decision back to your laptop.
 
 ---
 

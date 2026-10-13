@@ -1,7 +1,7 @@
 /*
  * Nudge - Pip MCU Sketch for Arduino UNO Q
  * 
- * Drives the 12x8 LED Matrix face, listens for physical Allow / Deny buttons,
+ * Drives the 8x13 LED Matrix face, listens for physical Allow / Deny buttons,
  * detects pokes, and communicates with the Python agent via Arduino_RouterBridge.
  *
  * Moods: idle | peek | watching | needs_you | happy | annoyed | dizzy | asleep
@@ -38,69 +38,133 @@ unsigned long blinkStartTime = 0;
 unsigned long lastPulseTime = 0;
 bool pulseState = false;
 
-// 12x8 LED Matrix Bitmaps (8 rows x 12 columns)
-// ArduinoLEDMatrix takes 3 uint32_t words representing 96 LEDs.
-// We provide helper macros or raw bit arrays for crisp readable expressions.
+// 8x13 LED Matrix Frames (104 LEDs, row-major, 13 columns x 8 rows)
+// The UNO Q matrix is 8x13 (NOT 12x8): draw() takes a 104-byte grayscale buffer.
 
-// Frame definitions (3 uint32_t per frame)
-const uint32_t FRAME_IDLE[3] = {
-    0b000000000000001100001100, // Rows 0-1
-    0b001100001100000000000000, // Rows 2-3
-    0b010000000010001111111100  // Rows 4-5, 6-7 (Eyes + Smile)
+#define ROW0  0,0,0,0,0,0,0,0,0,0,0,0,0
+#define EYE_L 0,0,1,1,0,0,0,0,0,1,1,0,0
+#define LIDS  0,0,1,1,1,0,0,0,1,1,1,0,0
+#define SMILE 0,1,0,0,0,0,0,0,0,0,0,1,0
+#define MOUTH 0,0,1,1,1,1,1,1,1,1,1,0,0
+
+// idle: open eyes + smile
+const uint8_t FRAME_IDLE[104] = {
+    ROW0,
+    EYE_L,
+    EYE_L,
+    ROW0,
+    SMILE,
+    MOUTH,
+    ROW0,
+    ROW0
 };
 
-const uint32_t FRAME_BLINK[3] = {
-    0b000000000000000000000000,
-    0b001111001111000000000000,
-    0b010000000010001111111100
+// blink: closed lids for 180 ms
+const uint8_t FRAME_BLINK[104] = {
+    ROW0,
+    ROW0,
+    LIDS,
+    ROW0,
+    SMILE,
+    MOUTH,
+    ROW0,
+    ROW0
 };
 
-const uint32_t FRAME_PEEK[3] = {
-    0b001100001100011110011110,
-    0b010010010010000000000000,
-    0b000000000000000111111000
+// peek: hooded left eye, looking sideways
+const uint8_t FRAME_PEEK[104] = {
+    ROW0,
+    0,1,1,1,0,0,0,0,0,1,1,0,0,
+    EYE_L,
+    ROW0,
+    SMILE,
+    MOUTH,
+    ROW0,
+    ROW0
 };
 
-const uint32_t FRAME_WATCHING[3] = {
-    0b011110011110010010010010,
-    0b010010010010011110011110,
-    0b000000000000000111111000
+// watching: wide attentive eyes + straight mouth
+const uint8_t FRAME_WATCHING[104] = {
+    0,1,1,1,0,0,0,0,0,1,1,1,0,
+    0,1,1,1,0,0,0,0,0,1,1,1,0,
+    0,1,1,1,0,0,0,0,0,1,1,1,0,
+    ROW0,
+    SMILE,
+    0,1,1,1,1,1,1,1,1,1,1,1,0,
+    ROW0,
+    ROW0
 };
 
-const uint32_t FRAME_NEEDS_YOU_A[3] = {
-    0b011100001110011100001110,
-    0b011100001110000000000000,
-    0b011100001110001111111100
+// needs_you frame A: urgent wide eyes
+const uint8_t FRAME_NEEDS_YOU_A[104] = {
+    ROW0,
+    0,1,1,1,1,0,0,0,1,1,1,1,0,
+    0,1,1,1,1,0,0,0,1,1,1,1,0,
+    ROW0,
+    ROW0,
+    0,1,1,1,1,1,1,1,1,1,1,1,0,
+    ROW0,
+    ROW0
 };
 
-const uint32_t FRAME_NEEDS_YOU_B[3] = {
-    0b000000000000011100001110,
-    0b011100001110000000000000,
-    0b000000000000000000000000
+// needs_you frame B: full-brightness flash
+const uint8_t FRAME_NEEDS_YOU_B[104] = {
+    1,1,1,1,1,1,1,1,1,1,1,1,1,
+    1,1,1,1,1,1,1,1,1,1,1,1,1,
+    1,1,1,1,1,1,1,1,1,1,1,1,1,
+    1,1,1,1,1,1,1,1,1,1,1,1,1,
+    1,1,1,1,1,1,1,1,1,1,1,1,1,
+    1,1,1,1,1,1,1,1,1,1,1,1,1,
+    1,1,1,1,1,1,1,1,1,1,1,1,1,
+    1,1,1,1,1,1,1,1,1,1,1,1,1
 };
 
-const uint32_t FRAME_HAPPY[3] = {
-    0b001100001100010010010010,
-    0b010001010001000000000000,
-    0b010000000010001111111100
+// happy: ^^ victory eyes
+const uint8_t FRAME_HAPPY[104] = {
+    ROW0,
+    EYE_L,
+    0,1,0,0,1,0,0,0,1,0,0,1,0,
+    1,0,0,0,0,1,1,0,0,0,0,0,1,
+    SMILE,
+    MOUTH,
+    ROW0,
+    ROW0
 };
 
-const uint32_t FRAME_ANNOYED[3] = {
-    0b000000000000011110011110,
-    0b000010000010000000000000,
-    0b000000000000001111111100
+// annoyed: flat skeptical brows + flat mouth
+const uint8_t FRAME_ANNOYED[104] = {
+    ROW0,
+    0,1,1,1,1,0,0,0,1,1,1,1,0,
+    ROW0,
+    ROW0,
+    ROW0,
+    0,1,1,1,1,1,1,1,1,1,1,1,0,
+    ROW0,
+    ROW0
 };
 
-const uint32_t FRAME_DIZZY[3] = {
-    0b010010010010001100001100,
-    0b001100001100010010010010,
-    0b000000000000001010101000
+// dizzy: crossed X eyes + wavy mouth
+const uint8_t FRAME_DIZZY[104] = {
+    0,1,0,0,0,1,0,1,0,0,0,1,0,
+    0,0,1,0,1,0,0,0,1,0,1,0,0,
+    0,1,0,0,0,1,0,1,0,0,0,1,0,
+    ROW0,
+    ROW0,
+    0,0,1,0,1,0,1,0,1,0,1,0,0,
+    ROW0,
+    ROW0
 };
 
-const uint32_t FRAME_ASLEEP[3] = {
-    0b000000000011000000000110,
-    0b001111001111000000001100,
-    0b000000000000000011110000
+// asleep: closed lids + z Z
+const uint8_t FRAME_ASLEEP[104] = {
+    0,0,0,0,0,0,0,0,0,0,1,1,1,
+    0,0,0,0,0,0,0,0,0,0,0,0,1,
+    0,0,0,0,0,0,0,0,0,0,1,1,1,
+    LIDS,
+    ROW0,
+    SMILE,
+    MOUTH,
+    ROW0
 };
 
 // RPC callback invoked by Python on Linux MPU
@@ -112,23 +176,23 @@ void rpc_set_mood(String mood) {
 
 void updateMoodMatrix() {
     if (currentMood == "idle") {
-        matrix.loadFrame(FRAME_IDLE);
+        matrix.draw(FRAME_IDLE);
     } else if (currentMood == "peek") {
-        matrix.loadFrame(FRAME_PEEK);
+        matrix.draw(FRAME_PEEK);
     } else if (currentMood == "watching") {
-        matrix.loadFrame(FRAME_WATCHING);
+        matrix.draw(FRAME_WATCHING);
     } else if (currentMood == "needs_you") {
-        matrix.loadFrame(pulseState ? FRAME_NEEDS_YOU_A : FRAME_NEEDS_YOU_B);
+        matrix.draw(pulseState ? FRAME_NEEDS_YOU_A : FRAME_NEEDS_YOU_B);
     } else if (currentMood == "happy") {
-        matrix.loadFrame(FRAME_HAPPY);
+        matrix.draw(FRAME_HAPPY);
     } else if (currentMood == "annoyed") {
-        matrix.loadFrame(FRAME_ANNOYED);
+        matrix.draw(FRAME_ANNOYED);
     } else if (currentMood == "dizzy") {
-        matrix.loadFrame(FRAME_DIZZY);
+        matrix.draw(FRAME_DIZZY);
     } else if (currentMood == "asleep") {
-        matrix.loadFrame(FRAME_ASLEEP);
+        matrix.draw(FRAME_ASLEEP);
     } else {
-        matrix.loadFrame(FRAME_IDLE);
+        matrix.draw(FRAME_IDLE);
     }
 }
 
@@ -140,8 +204,9 @@ void setup() {
     pinMode(PIN_BTN_DENY,  INPUT_PULLUP);
     pinMode(PIN_BTN_POKE,  INPUT_PULLUP);
 
-    // Start LED matrix
+    // Start LED matrix (frames are binary 0/1 grayscale)
     matrix.begin();
+    matrix.setGrayscaleBits(1);
     updateMoodMatrix();
 
     // Start Router Bridge to Linux MPU
@@ -192,18 +257,18 @@ void loop() {
         if (!isBlinking && (now - lastBlinkTime > blinkInterval)) {
             isBlinking = true;
             blinkStartTime = now;
-            matrix.loadFrame(FRAME_BLINK);
+            matrix.draw(FRAME_BLINK);
         } else if (isBlinking && (now - blinkStartTime > 180)) {
             isBlinking = false;
             lastBlinkTime = now;
             blinkInterval = random(2500, 5000);
-            matrix.loadFrame(FRAME_IDLE);
+            matrix.draw(FRAME_IDLE);
         }
     } else if (currentMood == "needs_you") {
         if (now - lastPulseTime > 350) {
             lastPulseTime = now;
             pulseState = !pulseState;
-            matrix.loadFrame(pulseState ? FRAME_NEEDS_YOU_A : FRAME_NEEDS_YOU_B);
+            matrix.draw(pulseState ? FRAME_NEEDS_YOU_A : FRAME_NEEDS_YOU_B);
         }
     }
 

@@ -29,7 +29,7 @@ This guide walks through the exact 60-second demo path for judges evaluating **N
 3. Click **Run**.
 4. Open the Web UI at `http://localhost:7000` (or `http://<board-ip>:7000`).
    * Pip appears on the screen in high-fps procedural Canvas 2D, his eyes tracking your cursor.
-   * The UNO Q 12x8 LED matrix boots up showing Pip's smiling face.
+   * The UNO Q 13x8 LED matrix boots up showing Pip's smiling face.
 
 ---
 

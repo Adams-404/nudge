@@ -4,6 +4,10 @@ profiles:
     platforms:
       - platform: arduino:zephyr
     libraries:
-      - Arduino_RouterBridge
-      - Arduino_LED_Matrix
+      - Arduino_RouterBridge (0.4.3)
+      - dependency: Arduino_RPClite (0.3.1)
+      - dependency: MsgPack (0.4.2)
+      - dependency: ArxContainer (0.7.0)
+      - dependency: ArxTypeTraits (0.3.2)
+      - dependency: DebugLog (0.8.4)
 default_profile: unoq

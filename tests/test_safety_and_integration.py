@@ -55,6 +55,46 @@ class HardwareSafetyAudit(unittest.TestCase):
         self.assertIn("DEBOUNCE_MS", code)
         self.assertIn("lastAllowPressTime", code)
 
+    def test_led_matrix_frames_match_unoq_hardware(self):
+        """UNO Q matrix is 8x13 (104 LEDs): frames must be uint8_t[104] drawn
+        via matrix.draw(). The 12x8 uint32_t[3] / loadFrame() layout (UNO R4
+        style) reads past the frame buffer on this hardware."""
+        with open(SKETCH_INO, "r") as f:
+            code = f.read()
+        self.assertIn("const uint8_t FRAME_IDLE[104]", code)
+        self.assertNotIn("loadFrame", code)
+        self.assertIn("matrix.draw(FRAME_", code)
+        self.assertIn("setGrayscaleBits(1)", code)
+        # Every FRAME_* definition must hold exactly 104 values (macros expand to 13)
+        import re
+        macros = {
+            "ROW0":  [0] * 13,
+            "EYE_L": [0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0],
+            "LIDS":  [0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0],
+            "SMILE": [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+            "MOUTH": [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
+        }
+        for name, body in re.findall(r"const uint8_t (FRAME_\w+)\[104\] = \{(.*?)\};", code, re.DOTALL):
+            values = []
+            for tok in body.replace(",", " ").split():
+                if tok in macros:
+                    values += macros[tok]
+                else:
+                    values.append(int(tok))
+            self.assertEqual(len(values), 104, f"{name} must be a 104-byte 8x13 frame")
+
+    def test_sketch_declares_pinned_routerbridge_libraries(self):
+        """App Lab cannot resolve bare library names; sketch.yaml must pin
+        RouterBridge and its transitive dependencies (Arduino_LED_Matrix ships
+        inside the zephyr core and must NOT be listed)."""
+        sketch_yaml = os.path.join(APPLAB_DIR, "sketch", "sketch.yaml")
+        with open(sketch_yaml, "r") as f:
+            cfg = f.read()
+        self.assertIn("Arduino_RouterBridge (", cfg)
+        self.assertIn("Arduino_RPClite (", cfg)
+        self.assertIn("MsgPack (", cfg)
+        self.assertNotIn("Arduino_LED_Matrix", cfg)
+
 
 class AppLabZipIntegrity(unittest.TestCase):
     """Verifies the importable App Lab zip archive structure and checksum."""

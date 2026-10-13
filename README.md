@@ -25,7 +25,7 @@ When coding agents (Claude Code, Cursor, Codex, Antigravity) run in the backgrou
 
 **Nudge** moves your agent's permission gate from a hidden terminal tab to your physical desk:
 
-- **Desk (Arduino UNO Q):** Meets **Pip**, a vigilant little desk creature. His 12x8 LED-matrix face reacts to your agent's state in real-time. Gemma 3 1B runs directly on the board's Linux MPU via the App Lab `arduino:llm` brick, triaging incoming events and keeping the gate closed until you press the **physical green Allow button**.
+- **Desk (Arduino UNO Q):** Meets **Pip**, a vigilant little desk creature. His 13x8 LED-matrix face reacts to your agent's state in real-time. Gemma 3 1B runs directly on the board's Linux MPU via the App Lab `arduino:llm` brick, triaging incoming events and keeping the gate closed until you press the **physical green Allow button**.
 - **Laptop (Sidecar & Island):** A top-edge island for Linux (Wayland / X11) and a universal hook watcher. It intercepts agent actions, strips confidential environment variables, compresses commands into safe 1-liners, and binds approvals strictly to unique request IDs.
 
 Gemma 3 1B is the **brain on the board**. Your laptop is the **hands with an allowlist**.
@@ -48,7 +48,7 @@ flowchart LR
     Py["Python Agent (Port 7000 / 8766)"]
     Gemma["Local Gemma 3 1B (llama.cpp)"]
     MCU["MCU Sketch (Bridge RPC)"]
-    Matrix["12x8 LED Matrix Face"]
+    Matrix["13x8 LED Matrix Face"]
     Buttons["Physical Allow / Deny Pins"]
     Web["Web UI (Canvas 2D Pip)"]
 
@@ -97,7 +97,7 @@ Pip's brain is **Gemma 3 1B**, running locally on the Arduino UNO Q via the App 
             ▼
 ┌────────────────────────┐
 │  Zephyr MCU            │
-│  • 12x8 LED Matrix     │ ── Lights up animated emoji faces & blinks
+│  • 13x8 LED Matrix     │ ── Lights up animated emoji faces & blinks
 │  • Physical Buttons    │ ── Tactile Allow / Deny approval
 └────────────────────────┘
 ```
@@ -112,7 +112,7 @@ Pip's brain is **Gemma 3 1B**, running locally on the Arduino UNO Q via the App 
 
 ## Does the Arduino Light Up Cute Emoji Faces? Yes! ◉‿◉
 
-The Arduino UNO Q has a built-in **12×8 LED Matrix** (96 red LEDs on the board). Pip's facial expressions light up dynamically on the physical hardware via [`applab/sketch/sketch.ino`](file:///home/adam/Projects/nudge/applab/sketch/sketch.ino).
+The Arduino UNO Q has a built-in **13×8 LED Matrix** (104 LEDs on the board). Pip's facial expressions light up dynamically on the physical hardware via [`applab/sketch/sketch.ino`](file:///home/adam/Projects/nudge/applab/sketch/sketch.ino).
 
 Here is how the physical LEDs light up for each mood:
 
@@ -120,80 +120,80 @@ Here is how the physical LEDs light up for each mood:
 Pip stands guard on your desk. Every 3–5 seconds, his eyelids drop for 180ms to blink naturally:
 ```
 Open Eyes:                     Blink (180ms):
-. . . . . . . . . . . .        . . . . . . . . . . . .
-. . ■ ■ . . . . ■ ■ . .        . . . . . . . . . . . .
-. . ■ ■ . . . . ■ ■ . .        . . ■ ■ ■ ■ . . ■ ■ ■ ■
-. . . . . . . . . . . .        . . . . . . . . . . . .
-. ■ . . . . . . . . ■ .        . ■ . . . . . . . . ■ .
-. . ■ ■ ■ ■ ■ ■ ■ ■ . .        . . ■ ■ ■ ■ ■ ■ ■ ■ . .
-. . . . . . . . . . . .        . . . . . . . . . . . .
-. . . . . . . . . . . .        . . . . . . . . . . . .
+. . . . . . . . . . . . .     . . . . . . . . . . . .
+. . ■ ■ . . . . . ■ ■ . .     . . . . . . . . . . . .
+. . ■ ■ . . . . . ■ ■ . .     . . ■ ■ ■ . . . ■ ■ ■ .
+. . . . . . . . . . . . .     . . . . . . . . . . . .
+. ■ . . . . . . . . . ■ .     . ■ . . . . . . . . ■ .
+. . ■ ■ ■ ■ ■ ■ ■ ■ ■ . .     . . ■ ■ ■ ■ ■ ■ ■ ■ ■ .
+. . . . . . . . . . . . .     . . . . . . . . . . . .
+. . . . . . . . . . . . .     . . . . . . . . . . . .
 ```
 
 ### 2. `needs_you` (Attention Alert / Pulsing Flash)
 When your agent asks for permission (e.g. `git push`), the LED matrix alternates every 350ms between two frames, flashing an urgent attention signal across your desk:
 ```
-Frame A (Pulsing Eyes):        Frame B (Flash):
-. ■ ■ ■ . . . . ■ ■ ■ .        . . . . . . . . . . . .
-. ■ ■ ■ . . . . ■ ■ ■ .        . ■ ■ ■ . . . . ■ ■ ■ .
-. ■ ■ ■ . . . . ■ ■ ■ .        . ■ ■ ■ . . . . ■ ■ ■ .
-. . . . . . . . . . . .        . . . . . . . . . . . .
-. ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ .        . . . . . . . . . . . .
-. . . . . . . . . . . .        . . . . . . . . . . . .
-. . . . . . . . . . . .        . . . . . . . . . . . .
-. . . . . . . . . . . .        . . . . . . . . . . . .
+Frame A (Pulsing Eyes):       Frame B (Flash):
+. . . . . . . . . . . . .     ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■
+. ■ ■ ■ ■ . . . ■ ■ ■ ■ .     ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■
+. ■ ■ ■ ■ . . . ■ ■ ■ ■ .     ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■
+. . . . . . . . . . . . .     ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■
+. . . . . . . . . . . . .     ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■
+. ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ .     ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■
+. . . . . . . . . . . . .     ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■
+. . . . . . . . . . . . .     ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■
 ```
 
 ### 3. `happy` (Curved `^^` Victory Eyes)
 When you press the green **Allow** button or your agent completes its work:
 ```
-. . ■ ■ . . . . ■ ■ . .
-. ■ . . ■ . . ■ . . ■ .
-■ . . . . ■ ■ . . . . ■
-. . . . . . . . . . . .
-. ■ . . . . . . . . ■ .
-. . ■ ■ ■ ■ ■ ■ ■ ■ . .
-. . . . . . . . . . . .
-. . . . . . . . . . . .
+. . . . . . . . . . . . .
+. . ■ ■ . . . . . ■ ■ . .
+. ■ . . ■ . . . ■ . . ■ .
+■ . . . . ■ ■ . . . . . ■
+. ■ . . . . . . . . . ■ .
+. . ■ ■ ■ ■ ■ ■ ■ ■ ■ . .
+. . . . . . . . . . . . .
+. . . . . . . . . . . . .
 ```
 
 ### 4. `annoyed` (Skeptical Flat Brows `- -`)
 When a command is denied or Pip is poked while working:
 ```
-. . . . . . . . . . . .
-. ■ ■ ■ ■ . . ■ ■ ■ ■ .
-. . . . . . . . . . . .
-. . . . . . . . . . . .
-. . . . . . . . . . . .
-. . ■ ■ ■ ■ ■ ■ ■ ■ . .
-. . . . . . . . . . . .
-. . . . . . . . . . . .
+. . . . . . . . . . . . .
+. ■ ■ ■ ■ . . . ■ ■ ■ ■ .
+. . . . . . . . . . . . .
+. . . . . . . . . . . . .
+. . . . . . . . . . . . .
+. ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ .
+. . . . . . . . . . . . .
+. . . . . . . . . . . . .
 ```
 
 ### 5. `dizzy` (Spinning Crossed Eyes `X X`)
 Triggered when you poke Pip 3+ times in rapid succession:
 ```
-. ■ . . ■ . . ■ . . ■ .
-. . ■ ■ . . . . ■ ■ . .
-. ■ . . ■ . . ■ . . ■ .
-. . . . . . . . . . . .
-. . . . . . . . . . . .
-. . ■ . ■ . ■ . ■ . . .
-. . . . . . . . . . . .
-. . . . . . . . . . . .
+. ■ . . . ■ . ■ . . . ■ .
+. . ■ . ■ . . . ■ . ■ . .
+. ■ . . . ■ . ■ . . . ■ .
+. . . . . . . . . . . . .
+. . . . . . . . . . . . .
+. . ■ . ■ . ■ . ■ . ■ . .
+. . . . . . . . . . . . .
+. . . . . . . . . . . . .
 ```
 
 ### 6. `asleep` (Closed Lids with `z Z`)
 When no agent sessions have been active:
 ```
-. . . . . . . . . . ■ ■
-. . . . . . . . . . . ■
-. . ■ ■ ■ ■ . . ■ ■ ■ ■
-. . . . . . . . . . ■ ■
-. . . . . . . . . . . .
-. . . . . ■ ■ ■ ■ . . .
-. . . . . . . . . . . .
-. . . . . . . . . . . .
+. . . . . . . . . . ■ ■ ■
+. . . . . . . . . . . . ■
+. . . . . . . . . . ■ ■ ■
+. . ■ ■ ■ . . . ■ ■ ■ . .
+. . . . . . . . . . . . .
+. ■ . . . . . . . . . ■ .
+. . ■ ■ ■ ■ ■ ■ ■ ■ ■ . .
+. . . . . . . . . . . . .
 ```
 
 ---
@@ -287,7 +287,7 @@ echo '{"kind":"approval","agent":"cursor","command":"npm publish","request_id":"
 ├── applab/                    # Importable Arduino App Lab Package
 │   ├── app.yaml              # App definition (bricks: arduino:llm, arduino:web_ui)
 │   ├── python/main.py        # Python agent: Gemma 3 1B triage, Bridge RPC, Web UI
-│   ├── sketch/               # MCU code: 12x8 LED Matrix face & button debouncing
+│   ├── sketch/               # MCU code: 13x8 LED Matrix face & button debouncing
 │   │   ├── sketch.ino
 │   │   └── sketch.yaml
 │   └── assets/               # Web UI (Procedural Canvas 2D Pip creature, dark CSS)
