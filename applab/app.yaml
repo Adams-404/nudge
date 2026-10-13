@@ -1,0 +1,10 @@
+name: Nudge
+icon: "◉"
+description: Pip lives on your UNO Q and watches coding agents. Gemma 4 runs on the board and asks you to Allow or Deny with a real button.
+ports:
+  - 7000
+  - 8766
+bricks:
+  - arduino:llm:
+      model: llamacpp:gemma-4-e2b
+  - arduino:web_ui
