@@ -361,6 +361,142 @@
     }
   }
 
+  // SSE Real-Time Sync
+  function initSSE() {
+    const evtSource = new EventSource('/api/stream');
+    evtSource.onmessage = function(e) {
+      try {
+        const data = JSON.parse(e.data);
+        if (data.status) {
+          updateUI(data.status);
+        }
+      } catch (err) {}
+    };
+    evtSource.onerror = function() {
+      evtSource.close();
+      setTimeout(initSSE, 3000); // Reconnect
+    };
+  }
 
+  // Fallback Poller
+  function pollStatus() {
+    fetch('/api/status')
+      .then(res => res.json())
+      .then(updateUI)
+      .catch(() => {});
+  }
+
+  // Event Handlers
+  btnAllow.addEventListener('click', () => {
+    if (!activeRequest) return;
+    fetch('/api/decision', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ request_id: activeRequest.request_id, decision: 'allow', source: 'web_ui' })
+    }).catch(() => {});
+  });
+
+  btnDeny.addEventListener('click', () => {
+    if (!activeRequest) return;
+    fetch('/api/decision', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ request_id: activeRequest.request_id, decision: 'deny', source: 'web_ui' })
+    }).catch(() => {});
+  });
+
+  btnPoke.addEventListener('click', triggerPoke);
+
+  btnDemo.addEventListener('click', () => {
+    btnDemo.disabled = true;
+    btnDemo.textContent = 'Running Demo...';
+    fetch('/api/demo', { method: 'POST' })
+      .finally(() => {
+        setTimeout(() => {
+          btnDemo.disabled = false;
+          btnDemo.innerHTML = '<span>▶</span> Try 60s Demo';
+        }, 15000);
+      });
+  });
+
+  btnToggleChat.addEventListener('click', () => {
+    chatSection.classList.toggle('collapsed');
+    if (!chatSection.classList.contains('collapsed')) {
+      chatInput.focus();
+    }
+  });
+
+  btnCloseChat.addEventListener('click', () => {
+    chatSection.classList.add('collapsed');
+  });
+
+  chatForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const msg = chatInput.value.trim();
+    if (!msg) return;
+
+    // Append user message
+    appendChatMsg('You', msg, 'user-msg');
+    chatInput.value = '';
+
+    fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: msg })
+    })
+    .then(r => r.json())
+    .then(data => {
+      appendChatMsg('Pip', data.reply, 'pip-msg');
+    })
+    .catch(() => {
+      appendChatMsg('Pip', 'Oops, brain hiccup! Still watching your agents though! ◉‿◉', 'pip-msg');
+    });
+  });
+
+  function appendChatMsg(sender, text, className) {
+    const div = document.createElement('div');
+    div.className = `msg ${className}`;
+    div.innerHTML = `<div class="sender">${sender}</div><div class="bubble">${escapeHtml(text)}</div>`;
+    chatMessages.appendChild(div);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function escapeHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  // Pairing Modal
+  btnPairModal.addEventListener('click', () => pairModal.classList.remove('hidden'));
+  btnCloseModal.addEventListener('click', () => pairModal.classList.add('hidden'));
+
+  btnSubmitPair.addEventListener('click', () => {
+    const code = pairCodeInput.value.trim();
+    const laptopUrl = laptopUrlInput.value.trim();
+    if (!code) return;
+
+    fetch('/api/pair', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: code, laptop_url: laptopUrl })
+    })
+    .then(r => r.json())
+    .then(() => {
+      pairModal.classList.add('hidden');
+      pollStatus();
+    });
+  });
+
+  btnUnpair.addEventListener('click', () => {
+    fetch('/api/unpair', { method: 'POST' }).then(() => {
+      pairModal.classList.add('hidden');
+      pollStatus();
+    });
+  });
+
+  // Start Engine
+  pollStatus();
+  initSSE();
   animate();
 })();
