@@ -273,13 +273,94 @@
     ctx.restore();
   }
 
-
+  // Physics & Animation Loop
   function animate() {
+    const now = Date.now();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Mouse interpolation
+    mouse.x += (mouse.targetX - mouse.x) * 0.15;
+    mouse.y += (mouse.targetY - mouse.y) * 0.15;
+
+    // Squish spring physics
+    const k = 0.18; // spring tension
+    const damp = 0.82; // damping
+    squish.vx += (1 - squish.x) * k;
+    squish.vy += (1 - squish.y) * k;
+    squish.vx *= damp;
+    squish.vy *= damp;
+    squish.x += squish.vx;
+    squish.y += squish.vy;
+
+    // Blinking timer
+    if (!blink.isBlinking && now > blink.nextTime) {
+      blink.isBlinking = true;
+      blink.nextTime = now + 160; // blink duration
+    } else if (blink.isBlinking && now > blink.nextTime) {
+      blink.isBlinking = false;
+      blink.nextTime = now + 2500 + Math.random() * 4000;
+    }
+
+    // Mood animations
+    if (currentMood === 'dizzy') {
+      dizzyAngle += 0.08;
+    }
+    if (currentMood === 'happy') {
+      floatOffset = -Math.abs(Math.sin(now / 180) * 16);
+    } else {
+      floatOffset = Math.sin(now / 500) * 6;
+    }
+
     const theme = MOOD_THEMES[currentMood] || MOOD_THEMES.idle;
+    halo.style.background = `radial-gradient(circle, ${theme.halo} 0%, transparent 70%)`;
+
+    // Render Pip
     drawPipBody(180, 180, 150, 140, theme);
     drawPipFace(180, 180, theme);
+
     requestAnimationFrame(animate);
   }
+
+  // Update DOM Status
+  function updateUI(status) {
+    if (!status) return;
+    currentMood = status.mood || 'idle';
+    activeRequest = status.active_request;
+    isPaired = !!status.paired;
+
+    moodBadge.textContent = currentMood;
+    moodBadge.className = `mood-badge mood-${currentMood}`;
+    oneLiner.textContent = status.one_liner || 'Pip is standing by';
+
+    // Bridge Status
+    if (status.has_bridge) {
+      bridgePill.className = 'pill status-pill active';
+      bridgePill.querySelector('.pill-text').textContent = 'LED Matrix: Linked';
+    } else {
+      bridgePill.className = 'pill status-pill';
+      bridgePill.querySelector('.pill-text').textContent = 'LED Matrix: Standalone';
+    }
+
+    // Pair Status
+    if (isPaired) {
+      pairPill.className = 'pill status-pill active';
+      pairStatusText.textContent = 'Laptop Paired';
+    } else {
+      pairPill.className = 'pill status-pill warning';
+      pairStatusText.textContent = 'Unpaired';
+    }
+
+    // Approval Card
+    if (activeRequest) {
+      approvalCard.classList.remove('hidden');
+      approvalAgent.textContent = (activeRequest.agent || 'AGENT').toUpperCase();
+      approvalSummary.textContent = activeRequest.summary || 'Approval Requested';
+      approvalCommand.textContent = activeRequest.command || '';
+    } else {
+      approvalCard.classList.add('hidden');
+    }
+  }
+
+
   animate();
 })();
