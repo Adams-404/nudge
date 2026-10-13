@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nudge - Pip on Arduino UNO Q</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Bar -->
+    <header class="top-nav">
+      <div class="brand">
+        <div class="brand-badge">◉</div>
+        <div class="brand-text">
+          <h1>Nudge</h1>
+          <span class="sub">Arduino UNO Q • Gemma 4</span>
+        </div>
+      </div>
+      <div class="status-pills">
+        <div id="bridge-pill" class="pill status-pill">
+          <span class="dot"></span>
+          <span class="pill-text">LED Matrix: Standalone</span>
+        </div>
+        <div id="pair-pill" class="pill status-pill warning">
+          <span class="dot"></span>
+          <span class="pill-text" id="pair-status-text">Unpaired</span>
+        </div>
+        <button id="btn-pair-modal" class="btn-sm" title="Pair with Laptop">Pair Laptop</button>
+      </div>
+    </header>
+
+    <!-- Main Character Stage -->
+    <main class="stage">
+      <div class="character-wrapper">
+        <div class="canvas-container">
+          <canvas id="pip-canvas" width="360" height="360"></canvas>
+          <div id="halo-glow" class="halo-glow"></div>
+        </div>
+
+        <div class="pip-meta">
+          <div class="mood-badge" id="mood-badge">idle</div>
+          <div class="one-liner" id="one-liner">Pip is standing by</div>
+        </div>
+      </div>
+
+      <!-- Approval Card (Dynamically displayed when needs_you) -->
+      <section id="approval-card" class="approval-card hidden">
+        <div class="card-header">
+          <span class="agent-tag" id="approval-agent">CURSOR</span>
+          <span class="card-title">Approval Requested</span>
+        </div>
+        <div class="card-summary" id="approval-summary">Cursor wants to run git push</div>
+        <pre class="command-box"><code id="approval-command">git push origin main</code></pre>
+        <div class="hardware-hint">
+          <span>💡 Or press the <strong>Physical Green Button</strong> on your UNO Q</span>
+        </div>
+        <div class="card-actions">
+          <button id="btn-deny" class="btn btn-deny">Deny</button>
+          <button id="btn-allow" class="btn btn-allow">Allow</button>
+        </div>
+      </section>
+
+      <!-- Quick Action Bar -->
+      <section class="action-bar">
+        <button id="btn-poke" class="btn-action" title="Poke Pip">
+          <span>👉</span> Poke Pip
+        </button>
+        <button id="btn-demo" class="btn-action highlight" title="Run 60-second interactive demo">
+          <span>▶</span> Try 60s Demo
+        </button>
+        <button id="btn-toggle-chat" class="btn-action" title="Chat with Gemma 4">
+          <span>💬</span> Chat with Pip
+        </button>
+      </section>
+
+      <!-- Chat Drawer -->
+      <section id="chat-section" class="chat-section collapsed">
+        <div class="chat-header">
+          <h3>Chat with Pip (Gemma 4 on board)</h3>
+          <button id="btn-close-chat" class="btn-icon">✕</button>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+          <div class="msg pip-msg">
+            <div class="sender">Pip</div>
+            <div class="bubble">Hi! I live inside this UNO Q board. I watch your coding agents and keep the gates shut until you say so! ◉‿◉</div>
+          </div>
+        </div>
+        <form id="chat-form" class="chat-input-row">
+          <input type="text" id="chat-input" placeholder="Say something to Pip..." autocomplete="off">
+          <button type="submit" class="btn-send">Send</button>
+        </form>
+      </section>
+    </main>
+
+    <!-- Footer info -->
+    <footer class="footer">
+      <span>Nudge • Privacy-first physical agent companion • Hacktoberfest 2026</span>
+    </footer>
+  </div>
+
+  <!-- Pairing Modal -->
+  <div id="pair-modal" class="modal-backdrop hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Pair Laptop Sidecar</h3>
+        <button id="btn-close-modal" class="btn-icon">✕</button>
+      </div>
+      <div class="modal-body">
+        <p>Run <code>python3 laptop/sidecar.py</code> on your laptop. Enter the 6-digit pairing code displayed on your screen:</p>
+        <div class="input-group">
+          <input type="text" id="pair-code-input" placeholder="123456" maxlength="6">
+          <input type="text" id="laptop-url-input" placeholder="http://192.168.1.X:7474" value="http://localhost:7474">
+        </div>
+        <button id="btn-submit-pair" class="btn btn-primary">Connect & Pair</button>
+        <div class="unpair-box">
+          <button id="btn-unpair" class="btn-link">Disconnect / Unpair</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="pip.js"></script>
+</body>
+</html>
