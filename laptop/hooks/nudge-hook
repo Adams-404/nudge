@@ -1,0 +1,87 @@
+#!/usr/bin/env python3
+"""
+nudge-hook: Universal agent hook script for Claude Code, Cursor, Codex, and Antigravity.
+Reads hook events from stdin or arguments, forwards them to the Nudge sidecar daemon,
+and returns exit code 0 (Allow) or 1 (Deny).
+
+Fail-open guarantee: If the Nudge sidecar is not running, exits immediately with code 0
+so your agent is NEVER blocked.
+"""
+
+import sys
+import os
+import json
+import urllib.request
+import urllib.error
+
+SIDECAR_URL = os.environ.get("NUDGE_SIDECAR_URL", "http://127.0.0.1:7474/hook")
+
+def main():
+    # Read input from stdin or CLI arguments
+    raw_text = ""
+    if not sys.stdin.isatty():
+        try:
+            raw_text = sys.stdin.read().strip()
+        except Exception:
+            pass
+
+    if not raw_text and len(sys.argv) > 1:
+        raw_text = sys.argv[1]
+
+    payload = {}
+    if raw_text:
+        try:
+            payload = json.loads(raw_text)
+        except Exception:
+            # Fallback if raw text isn't JSON
+            payload = {"summary": raw_text, "kind": "step"}
+
+    # Infer kind if standard hook event format
+    # Claude Code format: hook_event_name: "PreToolUse", tool_name: "Bash", tool_input: {"command": "..."}
+    if "hook_event_name" in payload:
+        event_name = payload.get("hook_event_name")
+        tool_name = payload.get("tool_name", "")
+        tool_input = payload.get("tool_input", {})
+
+        if event_name == "PreToolUse" and tool_name in ["Bash", "terminal", "shell"]:
+            payload["kind"] = "approval"
+            payload["agent"] = payload.get("coucou_agent", "claude")
+            payload["command"] = tool_input.get("command", "")
+            payload["summary"] = f"Wants to run: {payload['command'][:60]}"
+        elif event_name == "PostToolUse":
+            payload["kind"] = "step"
+            payload["summary"] = f"Finished {tool_name}"
+        elif event_name == "SessionDone":
+            payload["kind"] = "done"
+            payload["summary"] = "Session completed"
+
+    # Default fallback
+    if "kind" not in payload:
+        payload["kind"] = "approval" if "command" in payload else "step"
+    if "agent" not in payload:
+        payload["agent"] = "cursor"
+
+    # Forward to sidecar
+    try:
+        req = urllib.request.Request(
+            SIDECAR_URL,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"}
+        )
+        with urllib.request.urlopen(req, timeout=305.0) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            decision = data.get("decision", "allow")
+            if decision in ["allow", "always"]:
+                sys.exit(0)
+            else:
+                print(f"[Nudge] Command denied by user decision: {decision}", file=sys.stderr)
+                sys.exit(1)
+    except urllib.error.URLError:
+        # Sidecar not running -> fail open immediately
+        sys.exit(0)
+    except Exception as e:
+        # Any unexpected error -> fail open so developer is never trapped
+        sys.exit(0)
+
+if __name__ == "__main__":
+    main()
