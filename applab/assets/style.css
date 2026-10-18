@@ -870,3 +870,77 @@ body {
     max-width: 100%;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Inline icon system
+   --------------------------------------------------------------------------- */
+.icon-sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.icon {
+  width: 15px;
+  height: 15px;
+  display: block;
+  flex: none;
+  pointer-events: none;
+}
+
+.btn-sm,
+.btn-action,
+.btn-icon,
+.studio-chip,
+.studio-eye-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+}
+
+.btn-icon {
+  justify-content: center;
+  gap: 0;
+}
+
+.btn-sm .icon,
+.btn-action .icon,
+.btn-icon .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.studio-chip .icon,
+.studio-eye-chip .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.studio-header h3 {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.studio-toggle span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.studio-toggle .icon {
+  width: 15px;
+  height: 15px;
+}
+
+.studio-sub-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.studio-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}

@@ -181,13 +181,13 @@
       const load = document.createElement('button');
       load.className = 'preset-btn';
       load.title = 'Apply this design';
-      load.textContent = '✓';
+      load.innerHTML = '<svg class="icon"><use href="#i-check"/></svg>';
       load.addEventListener('click', () => applyConfig(presets[name]));
 
       const del = document.createElement('button');
       del.className = 'preset-btn del';
       del.title = 'Delete';
-      del.textContent = '✕';
+      del.innerHTML = '<svg class="icon"><use href="#i-x"/></svg>';
       del.addEventListener('click', () => {
         delete presets[name];
         savePresets();
@@ -1476,6 +1476,10 @@
       b.classList.toggle('active', b.dataset.shape === studio.shape));
     document.querySelectorAll('#studio-eyestyles [data-eyestyle]').forEach((b) =>
       b.classList.toggle('active', b.dataset.eyestyle === studio.eyeStyle));
+    document.querySelectorAll('#studio-head-pieces [data-head]').forEach((b) =>
+      b.classList.toggle('active', b.dataset.head === studio.head));
+    document.querySelectorAll('#studio-aura-effects [data-aura]').forEach((b) =>
+      b.classList.toggle('active', b.dataset.aura === studio.aura));
 
     const setSlider = (id, val, labelId, fmt) => {
       const el = q(id);
@@ -1496,8 +1500,6 @@
     setSlider('studio-eye-tilt', studio.eyeTilt, 'val-eye-tilt', (v) => v + '°');
     setSlider('studio-eye-y', studio.eyeY, 'val-eye-y', (v) => v + 'px');
 
-    if (q('studio-head')) q('studio-head').value = studio.head;
-    if (q('studio-aura')) q('studio-aura').value = studio.aura;
     if (q('studio-cheeks')) q('studio-cheeks').checked = studio.cheeks;
     if (q('studio-rings')) q('studio-rings').checked = studio.rings;
     if (q('studio-particles')) q('studio-particles').checked = studio.particles;
@@ -1541,9 +1543,11 @@
     bindSlider('studio-eye-tilt', 'eyeTilt', (v) => v + '°');
     bindSlider('studio-eye-y', 'eyeY', (v) => v + 'px');
 
-    // Selects
-    if (q('studio-head')) q('studio-head').addEventListener('change', (e) => { studio.head = e.target.value; saveStudio(); });
-    if (q('studio-aura')) q('studio-aura').addEventListener('change', (e) => { studio.aura = e.target.value; saveStudio(); });
+    // Head pieces / aura effects
+    document.querySelectorAll('#studio-head-pieces [data-head]').forEach((b) =>
+      b.addEventListener('click', () => { studio.head = b.dataset.head; saveStudio(); syncStudioUI(); }));
+    document.querySelectorAll('#studio-aura-effects [data-aura]').forEach((b) =>
+      b.addEventListener('click', () => { studio.aura = b.dataset.aura; saveStudio(); syncStudioUI(); }));
 
     // Toggles
     if (q('studio-cheeks')) q('studio-cheeks').addEventListener('change', (e) => { studio.cheeks = e.target.checked; saveStudio(); });
@@ -1618,7 +1622,7 @@
       .finally(() => {
         setTimeout(() => {
           btnDemo.disabled = false;
-          btnDemo.innerHTML = '<span>▶</span> Try 60s Demo';
+          btnDemo.innerHTML = '<svg class="icon"><use href="#i-play"/></svg>Try 60s Demo';
         }, 15000);
       });
   });

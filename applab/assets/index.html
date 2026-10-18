@@ -10,6 +10,176 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
+  <!-- Inline icon set (self-contained: no CDN / network needed on the board) -->
+  <svg class="icon-sprite" aria-hidden="true" focusable="false">
+    <defs>
+      <!-- UI -->
+      <symbol id="i-palette" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22a10 10 0 1 1 10-10c0 1.66-1.34 3-3 3h-2.5a2 2 0 0 0-2 2v.5A2.5 2.5 0 0 1 12 22Z"/>
+        <circle cx="13.5" cy="6.5" r=".9" fill="currentColor" stroke="none"/>
+        <circle cx="17.5" cy="10.5" r=".9" fill="currentColor" stroke="none"/>
+        <circle cx="8.5" cy="7.5" r=".9" fill="currentColor" stroke="none"/>
+        <circle cx="6.5" cy="12.5" r=".9" fill="currentColor" stroke="none"/>
+      </symbol>
+      <symbol id="i-sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.14-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.14a.5.5 0 0 1 .96 0L14.06 8.5A2 2 0 0 0 15.5 9.94l6.14 1.58a.5.5 0 0 1 0 .96L15.5 14.06a2 2 0 0 0-1.44 1.44l-1.58 6.14a.5.5 0 0 1-.96 0Z"/>
+        <path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/>
+      </symbol>
+      <symbol id="i-bulb" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 18h6"/><path d="M10 22h4"/>
+        <path d="M15.1 14c.9-1 1.4-2.4 1.4-3.9a4.5 4.5 0 0 0-9 0c0 1.5.5 2.9 1.4 3.9.6.7 1 1.5 1.1 2.4h4c.1-.9.5-1.7 1.1-2.4Z"/>
+      </symbol>
+      <symbol id="i-hand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 14a8 8 0 0 1-8 8"/><path d="M18 11v-1a2 2 0 0 0-4 0"/>
+        <path d="M14 10V9a2 2 0 0 0-4 0v1"/>
+        <path d="M10 9.5V4a2 2 0 0 0-4 0v10"/>
+        <path d="M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>
+      </symbol>
+      <symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m6 4 14 8-14 8Z"/>
+      </symbol>
+      <symbol id="i-message" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/>
+      </symbol>
+      <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 6 9 17l-5-5"/>
+      </symbol>
+      <symbol id="i-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"/><path d="M5.6 5.6 18.4 18.4"/>
+      </symbol>
+      <symbol id="i-reset" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>
+      </symbol>
+      <symbol id="i-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/>
+        <path d="M17 21v-6a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v6"/><path d="M7 3v4a1 1 0 0 0 1 1h6"/>
+      </symbol>
+      <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/>
+      </symbol>
+      <symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>
+      </symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <rect width="14" height="14" x="8" y="8" rx="2"/>
+        <path d="M4 16a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2"/>
+      </symbol>
+      <!-- Silhouettes -->
+      <symbol id="i-droplet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7Z"/>
+      </symbol>
+      <symbol id="i-cloud" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+      </symbol>
+      <symbol id="i-triangle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M13.73 4a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+      </symbol>
+      <symbol id="i-egg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2c-4 0-8 7.5-8 12.5a8 8 0 0 0 16 0C20 9.5 16 2 12 2Z"/>
+      </symbol>
+      <symbol id="i-robot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/>
+        <path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>
+      </symbol>
+      <symbol id="i-cat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5.5 9.5 4 4l4 2.2"/><path d="M18.5 9.5 20 4l-4 2.2"/>
+        <circle cx="12" cy="13.5" r="6.5"/>
+        <path d="M9.5 12.5h.01"/><path d="M14.5 12.5h.01"/><path d="M10.5 16c.8.7 2.2.7 3 0"/>
+      </symbol>
+      <symbol id="i-rabbit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8.5 9C7.5 6 7 3.4 8 2.6c1-.9 2.4.5 2.9 2.6"/>
+        <path d="M15.5 9c1-3 1.5-5.6.5-6.4-1-.9-2.4.5-2.9 2.6"/>
+        <circle cx="12" cy="14.5" r="6"/>
+        <path d="M10 13.5h.01"/><path d="M14 13.5h.01"/><path d="M11 16.5c.6.5 1.4.5 2 0"/>
+      </symbol>
+      <symbol id="i-panda" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="13.5" r="6.5"/><circle cx="6.2" cy="5.6" r="2.6"/><circle cx="17.8" cy="5.6" r="2.6"/>
+        <path d="M9.5 12.5h.01"/><path d="M14.5 12.5h.01"/><path d="M10.5 16c.8.6 2.2.6 3 0"/>
+      </symbol>
+      <symbol id="i-ufo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6.5 11a5.5 5.5 0 0 1 11 0"/>
+        <path d="M2 12c0 1.9 4.5 3.4 10 3.4S22 13.9 22 12s-4.5-3.1-10-3.1S2 10.1 2 12Z"/>
+        <path d="M8 15.6 7 18.5"/><path d="M12 15.9v3"/><path d="M16 15.6l1 2.9"/>
+      </symbol>
+      <!-- Eyes -->
+      <symbol id="i-capsule" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <rect width="10" height="18" x="7" y="3" rx="5"/>
+      </symbol>
+      <symbol id="i-crescent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 11a7 7 0 0 0 14 0"/>
+      </symbol>
+      <symbol id="i-stern" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 7.5 12 13"/><path d="M18 7.5 12 13"/>
+      </symbol>
+      <symbol id="i-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/>
+      </symbol>
+      <symbol id="i-star" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11.53 2.3a.53.53 0 0 1 .95 0l2.31 4.68a2.12 2.12 0 0 0 1.6 1.16l5.16.76a.53.53 0 0 1 .3.9l-3.74 3.64a2.12 2.12 0 0 0-.61 1.88l.88 5.14a.53.53 0 0 1-.77.56l-4.62-2.43a2.12 2.12 0 0 0-1.97 0l-4.62 2.43a.53.53 0 0 1-.77-.56l.88-5.14a2.12 2.12 0 0 0-.61-1.88L2.16 9.8a.53.53 0 0 1 .29-.9l5.17-.76a2.12 2.12 0 0 0 1.6-1.16Z"/>
+      </symbol>
+      <!-- Head pieces -->
+      <symbol id="i-halo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <ellipse cx="12" cy="5.5" rx="6.5" ry="2.2"/><path d="M6 16.5a6 6 0 0 1 12 0"/>
+      </symbol>
+      <symbol id="i-horns" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 5c-1.2 3.2-4 4-4 7.2"/><path d="M16 5c1.2 3.2 4 4 4 7.2"/><path d="M6.5 16a5.5 5.5 0 0 1 11 0"/>
+      </symbol>
+      <symbol id="i-antenna" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="4" r="1.8"/><path d="M12 5.8V9"/><path d="M6.5 17a5.5 5.5 0 0 1 11 0"/>
+      </symbol>
+      <symbol id="i-ninja" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3.5 9c0-2 3.8-3.6 8.5-3.6S20.5 7 20.5 9s-3.8 3.6-8.5 3.6S3.5 11 3.5 9Z"/>
+        <path d="M9.3 9h.01"/><path d="M14.7 9h.01"/>
+      </symbol>
+      <symbol id="i-heromask" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 10.5C5 8 8.2 7 12 7s7 1 9 3.5c-1 3.4-4 4.4-6.1 3.2L12 12.6l-2.9 1.1C7 15 4 13.9 3 10.5Z"/>
+        <path d="M8.5 10.8h.01"/><path d="M15.5 10.8h.01"/>
+      </symbol>
+      <symbol id="i-eyepatch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2.5 8.5 21 5"/><circle cx="9" cy="13.5" r="3.3"/>
+      </symbol>
+      <!-- Aura effects -->
+      <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M12 2v2"/><path d="M12 20v2"/><path d="M2 12h2"/><path d="M20 12h2"/>
+        <path d="M4.9 4.9 6.3 6.3"/><path d="M17.7 17.7l1.4 1.4"/><path d="M6.3 17.7 4.9 19.1"/><path d="M19.1 4.9 17.7 6.3"/>
+      </symbol>
+      <symbol id="i-rainbow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 17a9 9 0 0 1 18 0"/><path d="M6.5 17a5.5 5.5 0 0 1 11 0"/><path d="M10 17a2 2 0 0 1 4 0"/>
+      </symbol>
+      <symbol id="i-rain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 14.9A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.24"/>
+        <path d="M16 14v5"/><path d="M8 14v5"/><path d="M12 16v5"/>
+      </symbol>
+      <symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M13 2 4.1 12.6a.6.6 0 0 0 .46 1h6.06l-1.5 8.4 8.88-10.6a.6.6 0 0 0-.46-1h-6.06Z"/>
+      </symbol>
+      <symbol id="i-snow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2v20"/><path d="M2 12h20"/><path d="m4.9 4.9 14.2 14.2"/><path d="M19.1 4.9 4.9 19.1"/>
+      </symbol>
+      <symbol id="i-swords" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14.5 17.5 3 6V3h3l11.5 11.5"/>
+        <path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/>
+      </symbol>
+      <symbol id="i-cape" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6.5 3.2c3.4 1.4 7.6 1.4 11 0v8.3c0 4.4-3.4 6.9-5.5 8.7-2.1-1.8-5.5-4.3-5.5-8.7Z"/>
+      </symbol>
+      <symbol id="i-fire" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1.1-2.1-.2-4 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3a2.5 2.5 0 0 0 2.5 2.5Z"/>
+      </symbol>
+      <!-- Toggles -->
+      <symbol id="i-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/>
+      </symbol>
+      <symbol id="i-orbit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4.2" transform="rotate(-28 12 12)"/>
+      </symbol>
+    </defs>
+  </svg>
+
   <div class="app-container">
     <!-- Top Bar -->
     <header class="top-nav">
@@ -29,7 +199,7 @@
           <span class="dot"></span>
           <span class="pill-text" id="pair-status-text">Unpaired</span>
         </div>
-        <button id="btn-studio" class="btn-sm" title="Design your Pip avatar">🎨 Design</button>
+        <button id="btn-studio" class="btn-sm" title="Design your Pip avatar"><svg class="icon"><use href="#i-palette"/></svg>Design</button>
         <button id="btn-pair-modal" class="btn-sm" title="Pair with Laptop">Pair Laptop</button>
       </div>
     </header>
@@ -57,7 +227,7 @@
         <div class="card-summary" id="approval-summary">Cursor wants to run git push</div>
         <pre class="command-box"><code id="approval-command">git push origin main</code></pre>
         <div class="hardware-hint">
-          <span>💡 Or press the <strong>Physical Green Button</strong> on your UNO Q</span>
+          <span><svg class="icon"><use href="#i-bulb"/></svg>Or press the <strong>Physical Green Button</strong> on your UNO Q</span>
         </div>
         <div class="card-actions">
           <button id="btn-deny" class="btn btn-deny">Deny</button>
@@ -68,13 +238,13 @@
       <!-- Quick Action Bar -->
       <section class="action-bar">
         <button id="btn-poke" class="btn-action" title="Poke Pip">
-          <span>👉</span> Poke Pip
+          <svg class="icon"><use href="#i-hand"/></svg>Poke Pip
         </button>
         <button id="btn-demo" class="btn-action highlight" title="Run 60-second interactive demo">
-          <span>▶</span> Try 60s Demo
+          <svg class="icon"><use href="#i-play"/></svg>Try 60s Demo
         </button>
         <button id="btn-toggle-chat" class="btn-action" title="Chat with Gemma 3 1B">
-          <span>💬</span> Chat with Pip
+          <svg class="icon"><use href="#i-message"/></svg>Chat with Pip
         </button>
       </section>
 
@@ -82,7 +252,7 @@
       <section id="chat-section" class="chat-section collapsed">
         <div class="chat-header">
           <h3>Chat with Pip (Gemma 3 1B on board)</h3>
-          <button id="btn-close-chat" class="btn-icon">✕</button>
+          <button id="btn-close-chat" class="btn-icon" title="Close"><svg class="icon"><use href="#i-x"/></svg></button>
         </div>
         <div class="chat-messages" id="chat-messages">
           <div class="msg pip-msg">
@@ -107,10 +277,10 @@
   <aside id="studio-drawer" class="studio-drawer collapsed" aria-hidden="true">
     <div class="studio-header">
       <div>
-        <h3>🎨 Design Studio</h3>
+        <h3><svg class="icon"><use href="#i-palette"/></svg>Design Studio</h3>
         <span class="studio-sub">Redesign your Pip blob</span>
       </div>
-      <button id="btn-close-studio" class="btn-icon" title="Close">✕</button>
+      <button id="btn-close-studio" class="btn-icon" title="Close"><svg class="icon"><use href="#i-x"/></svg></button>
     </div>
 
     <div class="studio-body">
@@ -118,16 +288,16 @@
       <div class="studio-group">
         <h4 class="studio-group-title">1 · Silhouette &amp; physics</h4>
         <div class="studio-chips" id="studio-shapes">
-          <button class="studio-chip active" data-shape="AUTO">✨ Auto</button>
-          <button class="studio-chip" data-shape="BLOB">💧 Mercury</button>
-          <button class="studio-chip" data-shape="CLOUD">☁️ Cloud</button>
-          <button class="studio-chip" data-shape="TRIANGLE">📐 Triangle</button>
-          <button class="studio-chip" data-shape="EGG">🥚 Egg</button>
-          <button class="studio-chip" data-shape="ROBOT">🤖 Robot</button>
-          <button class="studio-chip" data-shape="CAT">🐱 Neko</button>
-          <button class="studio-chip" data-shape="RABBIT">🐰 Bunny</button>
-          <button class="studio-chip" data-shape="PANDA">🐼 Panda</button>
-          <button class="studio-chip" data-shape="UFO">🛸 UFO</button>
+          <button class="studio-chip active" data-shape="AUTO"><svg class="icon"><use href="#i-sparkles"/></svg>Auto</button>
+          <button class="studio-chip" data-shape="BLOB"><svg class="icon"><use href="#i-droplet"/></svg>Mercury</button>
+          <button class="studio-chip" data-shape="CLOUD"><svg class="icon"><use href="#i-cloud"/></svg>Cloud</button>
+          <button class="studio-chip" data-shape="TRIANGLE"><svg class="icon"><use href="#i-triangle"/></svg>Triangle</button>
+          <button class="studio-chip" data-shape="EGG"><svg class="icon"><use href="#i-egg"/></svg>Egg</button>
+          <button class="studio-chip" data-shape="ROBOT"><svg class="icon"><use href="#i-robot"/></svg>Robot</button>
+          <button class="studio-chip" data-shape="CAT"><svg class="icon"><use href="#i-cat"/></svg>Neko</button>
+          <button class="studio-chip" data-shape="RABBIT"><svg class="icon"><use href="#i-rabbit"/></svg>Bunny</button>
+          <button class="studio-chip" data-shape="PANDA"><svg class="icon"><use href="#i-panda"/></svg>Panda</button>
+          <button class="studio-chip" data-shape="UFO"><svg class="icon"><use href="#i-ufo"/></svg>UFO</button>
         </div>
         <label class="studio-slider">
           <span>Body width <b id="val-body-w">1.00×</b></span>
@@ -155,12 +325,12 @@
       <div class="studio-group">
         <h4 class="studio-group-title">2 · Eyes &amp; gaze</h4>
         <div class="studio-chips" id="studio-eyestyles">
-          <button class="studio-eye-chip active" data-eyestyle="AUTO">✨ Auto</button>
-          <button class="studio-eye-chip" data-eyestyle="PILL">💊 Pill</button>
-          <button class="studio-eye-chip" data-eyestyle="CRESCENT">^ ^ Crescent</button>
-          <button class="studio-eye-chip" data-eyestyle="STERN">\ / Stern</button>
-          <button class="studio-eye-chip" data-eyestyle="CIRCLE">O O Round</button>
-          <button class="studio-eye-chip" data-eyestyle="STAR">🤩 Star</button>
+          <button class="studio-eye-chip active" data-eyestyle="AUTO"><svg class="icon"><use href="#i-sparkles"/></svg>Auto</button>
+          <button class="studio-eye-chip" data-eyestyle="PILL"><svg class="icon"><use href="#i-capsule"/></svg>Pill</button>
+          <button class="studio-eye-chip" data-eyestyle="CRESCENT"><svg class="icon"><use href="#i-crescent"/></svg>Crescent</button>
+          <button class="studio-eye-chip" data-eyestyle="STERN"><svg class="icon"><use href="#i-stern"/></svg>Stern</button>
+          <button class="studio-eye-chip" data-eyestyle="CIRCLE"><svg class="icon"><use href="#i-circle"/></svg>Round</button>
+          <button class="studio-eye-chip" data-eyestyle="STAR"><svg class="icon"><use href="#i-star"/></svg>Star</button>
         </div>
         <label class="studio-slider">
           <span>Eye width <b id="val-eye-w">22px</b></span>
@@ -187,36 +357,36 @@
       <!-- 3. Accessories -->
       <div class="studio-group">
         <h4 class="studio-group-title">3 · Accessories</h4>
-        <label class="studio-select">
-          <span>Head piece</span>
-          <select id="studio-head">
-            <option value="NONE">None</option>
-            <option value="HALO">😇 Angel halo</option>
-            <option value="HORNS">👿 Devil horns</option>
-            <option value="ANTENNA">👽 UFO antenna</option>
-            <option value="NINJA_MASK">🥷 Ninja mask</option>
-            <option value="HERO_MASK">🦸 Hero mask</option>
-            <option value="EYEPATCH">🏴‍☠️ Eyepatch</option>
-          </select>
-        </label>
-        <label class="studio-select">
-          <span>Aura / effect</span>
-          <select id="studio-aura">
-            <option value="NONE">None</option>
-            <option value="SUN">☀️ Spinning sun</option>
-            <option value="RAINBOW">🌈 Rainbow arc</option>
-            <option value="RAIN">💧 Falling rain</option>
-            <option value="THUNDER">⚡ Lightning</option>
-            <option value="SNOW">❄️ Snowflakes</option>
-            <option value="KATANAS">⚔️ Crossed katanas</option>
-            <option value="CAPE">🦸 Flowing cape</option>
-            <option value="FIRE">🔥 Rising flames</option>
-          </select>
-        </label>
+        <div class="studio-sub-group">
+          <span class="studio-label">Head piece</span>
+          <div class="studio-chips" id="studio-head-pieces">
+            <button class="studio-chip active" data-head="NONE"><svg class="icon"><use href="#i-none"/></svg>None</button>
+            <button class="studio-chip" data-head="HALO"><svg class="icon"><use href="#i-halo"/></svg>Halo</button>
+            <button class="studio-chip" data-head="HORNS"><svg class="icon"><use href="#i-horns"/></svg>Horns</button>
+            <button class="studio-chip" data-head="ANTENNA"><svg class="icon"><use href="#i-antenna"/></svg>Antenna</button>
+            <button class="studio-chip" data-head="NINJA_MASK"><svg class="icon"><use href="#i-ninja"/></svg>Ninja</button>
+            <button class="studio-chip" data-head="HERO_MASK"><svg class="icon"><use href="#i-heromask"/></svg>Hero</button>
+            <button class="studio-chip" data-head="EYEPATCH"><svg class="icon"><use href="#i-eyepatch"/></svg>Eyepatch</button>
+          </div>
+        </div>
+        <div class="studio-sub-group">
+          <span class="studio-label">Aura / effect</span>
+          <div class="studio-chips" id="studio-aura-effects">
+            <button class="studio-chip active" data-aura="NONE"><svg class="icon"><use href="#i-none"/></svg>None</button>
+            <button class="studio-chip" data-aura="SUN"><svg class="icon"><use href="#i-sun"/></svg>Sun</button>
+            <button class="studio-chip" data-aura="RAINBOW"><svg class="icon"><use href="#i-rainbow"/></svg>Rainbow</button>
+            <button class="studio-chip" data-aura="RAIN"><svg class="icon"><use href="#i-rain"/></svg>Rain</button>
+            <button class="studio-chip" data-aura="THUNDER"><svg class="icon"><use href="#i-bolt"/></svg>Thunder</button>
+            <button class="studio-chip" data-aura="SNOW"><svg class="icon"><use href="#i-snow"/></svg>Snow</button>
+            <button class="studio-chip" data-aura="KATANAS"><svg class="icon"><use href="#i-swords"/></svg>Katanas</button>
+            <button class="studio-chip" data-aura="CAPE"><svg class="icon"><use href="#i-cape"/></svg>Cape</button>
+            <button class="studio-chip" data-aura="FIRE"><svg class="icon"><use href="#i-fire"/></svg>Fire</button>
+          </div>
+        </div>
         <div class="studio-toggles">
-          <label class="studio-toggle"><input type="checkbox" id="studio-cheeks"> <span>🌸 Blush cheeks</span></label>
-          <label class="studio-toggle"><input type="checkbox" id="studio-rings"> <span>🪐 Orbit rings</span></label>
-          <label class="studio-toggle"><input type="checkbox" id="studio-particles"> <span>💫 Stardust</span></label>
+          <label class="studio-toggle"><input type="checkbox" id="studio-cheeks"> <span><svg class="icon"><use href="#i-heart"/></svg>Blush cheeks</span></label>
+          <label class="studio-toggle"><input type="checkbox" id="studio-rings"> <span><svg class="icon"><use href="#i-orbit"/></svg>Orbit rings</span></label>
+          <label class="studio-toggle"><input type="checkbox" id="studio-particles"> <span><svg class="icon"><use href="#i-sparkles"/></svg>Stardust</span></label>
         </div>
       </div>
 
@@ -250,20 +420,20 @@
         <h4 class="studio-group-title">5 · Presets &amp; sharing</h4>
         <div class="studio-preset-save">
           <input type="text" id="studio-preset-name" placeholder="Name this design…" maxlength="28" autocomplete="off">
-          <button id="btn-save-preset" class="btn-sm">💾 Save</button>
+          <button id="btn-save-preset" class="btn-sm"><svg class="icon"><use href="#i-save"/></svg>Save</button>
         </div>
         <div class="studio-preset-list" id="studio-preset-list"></div>
         <div class="studio-preset-actions">
-          <button id="btn-export-preset" class="studio-chip">📤 Export JSON</button>
-          <button id="btn-import-preset" class="studio-chip">📥 Import JSON</button>
-          <button id="btn-copy-preset" class="studio-chip">📋 Copy JSON</button>
+          <button id="btn-export-preset" class="studio-chip"><svg class="icon"><use href="#i-upload"/></svg>Export JSON</button>
+          <button id="btn-import-preset" class="studio-chip"><svg class="icon"><use href="#i-download"/></svg>Import JSON</button>
+          <button id="btn-copy-preset" class="studio-chip"><svg class="icon"><use href="#i-copy"/></svg>Copy JSON</button>
         </div>
         <input type="file" id="studio-import-file" accept="application/json,.json" hidden>
       </div>
     </div>
 
     <div class="studio-footer">
-      <button id="btn-reset-studio" class="btn-sm" title="Restore factory Pip">↺ Reset defaults</button>
+      <button id="btn-reset-studio" class="btn-sm" title="Restore factory Pip"><svg class="icon"><use href="#i-reset"/></svg>Reset defaults</button>
     </div>
   </aside>
 
@@ -272,7 +442,7 @@
     <div class="modal">
       <div class="modal-header">
         <h3>Pair Laptop Sidecar</h3>
-        <button id="btn-close-modal" class="btn-icon">✕</button>
+        <button id="btn-close-modal" class="btn-icon" title="Close"><svg class="icon"><use href="#i-x"/></svg></button>
       </div>
       <div class="modal-body">
         <p>Run <code>python3 laptop/sidecar.py</code> on your laptop. Enter the 6-digit pairing code displayed on your screen:</p>
