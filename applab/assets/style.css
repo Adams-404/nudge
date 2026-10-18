@@ -161,6 +161,9 @@ body {
   cursor: pointer;
   z-index: 2;
   transition: transform 0.1s ease;
+  /* Let the shadow follow the liquid blob silhouette instead of a square box */
+  filter: drop-shadow(0 16px 26px rgba(0, 0, 0, 0.55));
+  touch-action: none;
 }
 
 #pip-canvas:active {

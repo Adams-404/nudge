@@ -290,7 +290,7 @@ echo '{"kind":"approval","agent":"cursor","command":"npm publish","request_id":"
 │   ├── sketch/               # MCU code: 13x8 LED Matrix face & button debouncing
 │   │   ├── sketch.ino
 │   │   └── sketch.yaml
-│   └── assets/               # Web UI (Procedural Canvas 2D Pip creature, dark CSS)
+│   └── assets/               # Web UI (Liquid blob Pip: 16-point Bezier jelly, dark CSS)
 │       ├── index.html
 │       ├── style.css
 │       └── pip.js
