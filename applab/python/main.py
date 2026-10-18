@@ -484,6 +484,7 @@ class NudgeHandler(BaseHTTPRequestHandler):
     def send_json(self, status_code, data):
         self.send_response(status_code)
         self.send_header("Content-Type", "application/json")
+        self.send_header("Cache-Control", "no-store")
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
@@ -533,6 +534,12 @@ class NudgeHandler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header("Content-Type", content_type)
                 self.send_header("Content-Length", str(len(content)))
+                # Never let the browser cache the Web UI: after an App Lab
+                # redeploy the JS/CSS must refresh immediately (a stale pip.js
+                # otherwise keeps rendering the previous character).
+                self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+                self.send_header("Pragma", "no-cache")
+                self.send_header("Expires", "0")
                 self.end_headers()
                 self.wfile.write(content)
                 return
