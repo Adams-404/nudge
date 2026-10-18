@@ -781,6 +781,89 @@ body {
   justify-content: center;
 }
 
+.studio-preset-save {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.studio-preset-save input {
+  flex: 1;
+  background: #0d1117;
+  border: 1px solid var(--bg-card-border);
+  color: var(--text-primary);
+  padding: 0.45rem 0.7rem;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-family: var(--font-sans);
+  outline: none;
+}
+
+.studio-preset-save input:focus {
+  border-color: var(--accent-cyan);
+}
+
+.studio-preset-save .btn-sm {
+  white-space: nowrap;
+}
+
+.studio-preset-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.studio-preset-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--bg-card-border);
+  border-radius: 10px;
+  padding: 0.35rem 0.4rem 0.35rem 0.7rem;
+}
+
+.studio-preset-item .preset-name {
+  flex: 1;
+  font-size: 0.8rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.studio-preset-item .preset-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 0.15rem 0.3rem;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.studio-preset-item .preset-btn:hover {
+  color: var(--accent-cyan);
+  background: rgba(56, 189, 248, 0.12);
+}
+
+.studio-preset-item .preset-btn.del:hover {
+  color: var(--accent-red);
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.studio-preset-empty {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.studio-preset-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
 @media (max-width: 520px) {
   .studio-drawer {
     width: 100%;

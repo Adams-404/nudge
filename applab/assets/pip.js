@@ -117,6 +117,135 @@
   }
 
   // ---------------------------------------------------------------------------
+  // Design presets (saved designs + JSON sharing)
+  // ---------------------------------------------------------------------------
+  const PRESET_KEY = 'nudge.pip.presets.v1';
+
+  const SEED_PRESETS = {
+    'Classic Mercury': {},
+    'Neko Blob': { shape: 'CAT', cheeks: true },
+    'Cosmic Drift': { shape: 'BLOB', rings: true, particles: true, bodyColor: '#1e293b' },
+    'Hero Pip': { head: 'HERO_MASK', aura: 'CAPE' },
+    'Sunny Day': { aura: 'SUN', cheeks: true, bodyColor: '#334155' }
+  };
+
+  let presets = {};
+
+  function normalizeConfig(cfg) {
+    return Object.assign({}, STUDIO_DEFAULTS, cfg || {});
+  }
+
+  function loadPresets() {
+    try {
+      const raw = localStorage.getItem(PRESET_KEY);
+      presets = raw ? JSON.parse(raw) : null;
+    } catch (e) { presets = null; }
+    if (!presets || typeof presets !== 'object' || Array.isArray(presets)) {
+      presets = {};
+      Object.keys(SEED_PRESETS).forEach((k) => { presets[k] = normalizeConfig(SEED_PRESETS[k]); });
+      savePresets();
+    }
+  }
+
+  function savePresets() {
+    try { localStorage.setItem(PRESET_KEY, JSON.stringify(presets)); } catch (e) {}
+  }
+
+  function applyConfig(cfg) {
+    studio = normalizeConfig(cfg);
+    saveStudio();
+    syncStudioUI();
+    triggerBlink();
+  }
+
+  function renderPresetList() {
+    const list = document.getElementById('studio-preset-list');
+    if (!list) return;
+    list.innerHTML = '';
+    const names = Object.keys(presets);
+    if (!names.length) {
+      const empty = document.createElement('div');
+      empty.className = 'studio-preset-empty';
+      empty.textContent = 'No saved designs yet.';
+      list.appendChild(empty);
+      return;
+    }
+    names.forEach((name) => {
+      const item = document.createElement('div');
+      item.className = 'studio-preset-item';
+
+      const label = document.createElement('span');
+      label.className = 'preset-name';
+      label.textContent = name;
+
+      const load = document.createElement('button');
+      load.className = 'preset-btn';
+      load.title = 'Apply this design';
+      load.textContent = '✓';
+      load.addEventListener('click', () => applyConfig(presets[name]));
+
+      const del = document.createElement('button');
+      del.className = 'preset-btn del';
+      del.title = 'Delete';
+      del.textContent = '✕';
+      del.addEventListener('click', () => {
+        delete presets[name];
+        savePresets();
+        renderPresetList();
+      });
+
+      item.appendChild(label);
+      item.appendChild(load);
+      item.appendChild(del);
+      list.appendChild(item);
+    });
+  }
+
+  function saveCurrentPreset() {
+    const input = document.getElementById('studio-preset-name');
+    if (!input) return;
+    const name = input.value.trim();
+    if (!name) { input.focus(); return; }
+    presets[name] = normalizeConfig(studio);
+    savePresets();
+    input.value = '';
+    renderPresetList();
+  }
+
+  function exportPreset() {
+    try {
+      const payload = { app: 'nudge-pip', version: 1, config: normalizeConfig(studio) };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'pip-design.json';
+      if (document.body) document.body.appendChild(a);
+      a.click();
+      if (a.remove) a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (e) { /* download unavailable */ }
+  }
+
+  function copyPreset() {
+    const json = JSON.stringify({ app: 'nudge-pip', version: 1, config: normalizeConfig(studio) }, null, 2);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(json).catch(() => {});
+    }
+  }
+
+  function handleImportFile(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(String(reader.result));
+        applyConfig(data && data.config ? data.config : data);
+      } catch (e) { /* ignore invalid JSON */ }
+    };
+    reader.readAsText(file);
+  }
+
+  // ---------------------------------------------------------------------------
   // Engine state
   // ---------------------------------------------------------------------------
   const state = {
@@ -1431,6 +1560,29 @@
         if (q('studio-body-color')) q('studio-body-color').value = studio.bodyColor;
       }));
 
+    // Presets & sharing
+    if (q('btn-save-preset')) q('btn-save-preset').addEventListener('click', saveCurrentPreset);
+    if (q('studio-preset-name')) {
+      q('studio-preset-name').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); saveCurrentPreset(); }
+      });
+    }
+    if (q('btn-export-preset')) q('btn-export-preset').addEventListener('click', exportPreset);
+    if (q('btn-copy-preset')) q('btn-copy-preset').addEventListener('click', copyPreset);
+
+    const importBtn = q('btn-import-preset');
+    const fileInput = q('studio-import-file');
+    if (importBtn && fileInput) importBtn.addEventListener('click', () => fileInput.click());
+    if (fileInput) {
+      fileInput.addEventListener('change', (e) => {
+        const files = e && e.target && e.target.files;
+        if (files && files[0]) handleImportFile(files[0]);
+        e.target.value = '';
+      });
+    }
+
+    renderPresetList();
+
     const openStudio = () => studioDrawer.classList.remove('collapsed');
     const hash = window.location.hash.replace('#', '');
     if (hash === 'studio' || hash === 'design') setTimeout(openStudio, 300);
@@ -1541,6 +1693,7 @@
   initBlob();
   initParticles();
   loadStudio();
+  loadPresets();
   initStudioUI();
   syncStudioUI();
   pollStatus();

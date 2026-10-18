@@ -244,6 +244,22 @@
           <button class="studio-swatch" data-color="#fbbf24" style="background:#fbbf24" title="Amber"></button>
         </div>
       </div>
+
+      <!-- 5. Presets & sharing -->
+      <div class="studio-group">
+        <h4 class="studio-group-title">5 · Presets &amp; sharing</h4>
+        <div class="studio-preset-save">
+          <input type="text" id="studio-preset-name" placeholder="Name this design…" maxlength="28" autocomplete="off">
+          <button id="btn-save-preset" class="btn-sm">💾 Save</button>
+        </div>
+        <div class="studio-preset-list" id="studio-preset-list"></div>
+        <div class="studio-preset-actions">
+          <button id="btn-export-preset" class="studio-chip">📤 Export JSON</button>
+          <button id="btn-import-preset" class="studio-chip">📥 Import JSON</button>
+          <button id="btn-copy-preset" class="studio-chip">📋 Copy JSON</button>
+        </div>
+        <input type="file" id="studio-import-file" accept="application/json,.json" hidden>
+      </div>
     </div>
 
     <div class="studio-footer">
