@@ -29,6 +29,7 @@
           <span class="dot"></span>
           <span class="pill-text" id="pair-status-text">Unpaired</span>
         </div>
+        <button id="btn-studio" class="btn-sm" title="Design your Pip avatar">🎨 Design</button>
         <button id="btn-pair-modal" class="btn-sm" title="Pair with Laptop">Pair Laptop</button>
       </div>
     </header>
@@ -101,6 +102,154 @@
       <span>Nudge • Privacy-first physical agent companion • Hacktoberfest 2026</span>
     </footer>
   </div>
+
+  <!-- Design Studio Drawer -->
+  <aside id="studio-drawer" class="studio-drawer collapsed" aria-hidden="true">
+    <div class="studio-header">
+      <div>
+        <h3>🎨 Design Studio</h3>
+        <span class="studio-sub">Redesign your Pip blob</span>
+      </div>
+      <button id="btn-close-studio" class="btn-icon" title="Close">✕</button>
+    </div>
+
+    <div class="studio-body">
+      <!-- 1. Silhouette & physics -->
+      <div class="studio-group">
+        <h4 class="studio-group-title">1 · Silhouette &amp; physics</h4>
+        <div class="studio-chips" id="studio-shapes">
+          <button class="studio-chip active" data-shape="AUTO">✨ Auto</button>
+          <button class="studio-chip" data-shape="BLOB">💧 Mercury</button>
+          <button class="studio-chip" data-shape="CLOUD">☁️ Cloud</button>
+          <button class="studio-chip" data-shape="TRIANGLE">📐 Triangle</button>
+          <button class="studio-chip" data-shape="EGG">🥚 Egg</button>
+          <button class="studio-chip" data-shape="ROBOT">🤖 Robot</button>
+          <button class="studio-chip" data-shape="CAT">🐱 Neko</button>
+          <button class="studio-chip" data-shape="RABBIT">🐰 Bunny</button>
+          <button class="studio-chip" data-shape="PANDA">🐼 Panda</button>
+          <button class="studio-chip" data-shape="UFO">🛸 UFO</button>
+        </div>
+        <label class="studio-slider">
+          <span>Body width <b id="val-body-w">1.00×</b></span>
+          <input type="range" id="studio-body-w" min="0.6" max="1.5" step="0.01" value="1">
+        </label>
+        <label class="studio-slider">
+          <span>Body height <b id="val-body-h">1.00×</b></span>
+          <input type="range" id="studio-body-h" min="0.6" max="1.5" step="0.01" value="1">
+        </label>
+        <label class="studio-slider">
+          <span>Body tilt <b id="val-body-rot">0°</b></span>
+          <input type="range" id="studio-body-rot" min="-25" max="25" step="1" value="0">
+        </label>
+        <label class="studio-slider">
+          <span>Blob elasticity <b id="val-stiffness">0.13</b></span>
+          <input type="range" id="studio-stiffness" min="0.04" max="0.30" step="0.01" value="0.13">
+        </label>
+        <label class="studio-slider">
+          <span>Wobble damping <b id="val-damping">0.82</b></span>
+          <input type="range" id="studio-damping" min="0.60" max="0.95" step="0.01" value="0.82">
+        </label>
+      </div>
+
+      <!-- 2. Eyes -->
+      <div class="studio-group">
+        <h4 class="studio-group-title">2 · Eyes &amp; gaze</h4>
+        <div class="studio-chips" id="studio-eyestyles">
+          <button class="studio-eye-chip active" data-eyestyle="AUTO">✨ Auto</button>
+          <button class="studio-eye-chip" data-eyestyle="PILL">💊 Pill</button>
+          <button class="studio-eye-chip" data-eyestyle="CRESCENT">^ ^ Crescent</button>
+          <button class="studio-eye-chip" data-eyestyle="STERN">\ / Stern</button>
+          <button class="studio-eye-chip" data-eyestyle="CIRCLE">O O Round</button>
+          <button class="studio-eye-chip" data-eyestyle="STAR">🤩 Star</button>
+        </div>
+        <label class="studio-slider">
+          <span>Eye width <b id="val-eye-w">22px</b></span>
+          <input type="range" id="studio-eye-w" min="10" max="40" step="1" value="22">
+        </label>
+        <label class="studio-slider">
+          <span>Eye height <b id="val-eye-h">46px</b></span>
+          <input type="range" id="studio-eye-h" min="8" max="64" step="1" value="46">
+        </label>
+        <label class="studio-slider">
+          <span>Eye spacing <b id="val-eye-spacing">52px</b></span>
+          <input type="range" id="studio-eye-spacing" min="24" max="80" step="1" value="52">
+        </label>
+        <label class="studio-slider">
+          <span>Symmetric tilt <b id="val-eye-tilt">0°</b></span>
+          <input type="range" id="studio-eye-tilt" min="-30" max="30" step="1" value="0">
+        </label>
+        <label class="studio-slider">
+          <span>Vertical position <b id="val-eye-y">0px</b></span>
+          <input type="range" id="studio-eye-y" min="-40" max="40" step="1" value="0">
+        </label>
+      </div>
+
+      <!-- 3. Accessories -->
+      <div class="studio-group">
+        <h4 class="studio-group-title">3 · Accessories</h4>
+        <label class="studio-select">
+          <span>Head piece</span>
+          <select id="studio-head">
+            <option value="NONE">None</option>
+            <option value="HALO">😇 Angel halo</option>
+            <option value="HORNS">👿 Devil horns</option>
+            <option value="ANTENNA">👽 UFO antenna</option>
+            <option value="NINJA_MASK">🥷 Ninja mask</option>
+            <option value="HERO_MASK">🦸 Hero mask</option>
+            <option value="EYEPATCH">🏴‍☠️ Eyepatch</option>
+          </select>
+        </label>
+        <label class="studio-select">
+          <span>Aura / effect</span>
+          <select id="studio-aura">
+            <option value="NONE">None</option>
+            <option value="SUN">☀️ Spinning sun</option>
+            <option value="RAINBOW">🌈 Rainbow arc</option>
+            <option value="RAIN">💧 Falling rain</option>
+            <option value="THUNDER">⚡ Lightning</option>
+            <option value="SNOW">❄️ Snowflakes</option>
+            <option value="KATANAS">⚔️ Crossed katanas</option>
+            <option value="CAPE">🦸 Flowing cape</option>
+            <option value="FIRE">🔥 Rising flames</option>
+          </select>
+        </label>
+        <div class="studio-toggles">
+          <label class="studio-toggle"><input type="checkbox" id="studio-cheeks"> <span>🌸 Blush cheeks</span></label>
+          <label class="studio-toggle"><input type="checkbox" id="studio-rings"> <span>🪐 Orbit rings</span></label>
+          <label class="studio-toggle"><input type="checkbox" id="studio-particles"> <span>💫 Stardust</span></label>
+        </div>
+      </div>
+
+      <!-- 4. Colors -->
+      <div class="studio-group">
+        <h4 class="studio-group-title">4 · Colors</h4>
+        <div class="studio-colors">
+          <label class="studio-color">
+            <span>Body</span>
+            <input type="color" id="studio-body-color" value="#0a0a0c">
+          </label>
+          <label class="studio-color">
+            <span>Eyes</span>
+            <input type="color" id="studio-eye-color" value="#ffffff">
+          </label>
+        </div>
+        <div class="studio-swatches" id="studio-body-swatches">
+          <button class="studio-swatch" data-color="#0a0a0c" style="background:#0a0a0c" title="Pure black"></button>
+          <button class="studio-swatch" data-color="#1e293b" style="background:#1e293b" title="Midnight slate"></button>
+          <button class="studio-swatch" data-color="#334155" style="background:#334155" title="Graphite"></button>
+          <button class="studio-swatch" data-color="#f8fafc" style="background:#f8fafc" title="Mercury white"></button>
+          <button class="studio-swatch" data-color="#38bdf8" style="background:#38bdf8" title="Nudge cyan"></button>
+          <button class="studio-swatch" data-color="#4ade80" style="background:#4ade80" title="Jelly green"></button>
+          <button class="studio-swatch" data-color="#c084fc" style="background:#c084fc" title="Neon violet"></button>
+          <button class="studio-swatch" data-color="#fbbf24" style="background:#fbbf24" title="Amber"></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="studio-footer">
+      <button id="btn-reset-studio" class="btn-sm" title="Restore factory Pip">↺ Reset defaults</button>
+    </div>
+  </aside>
 
   <!-- Pairing Modal -->
   <div id="pair-modal" class="modal-backdrop hidden">
